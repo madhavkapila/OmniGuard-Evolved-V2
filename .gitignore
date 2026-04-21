@@ -1,0 +1,97 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# =========================
+# Virtual Environments
+# =========================
+.venv/
+venv/
+env/
+
+# =========================
+# Build and Packaging
+# =========================
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# =========================
+# Runtime and Logs
+# =========================
+*.log
+logs/
+*.pid
+
+# =========================
+# Model and Training Artifacts
+# =========================
+outputs/
+checkpoints/
+adapters/
+reports/*.png
+reports/*.json
+reports/*.md
+wandb/
+
+# =========================
+# Local Env / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# =========================
+# Editors and OS
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# =========================
+# Docker
+# =========================
+*.tar
+docker-data/
+
+# =========================
+# HuggingFace cache
+# =========================
+hf-cache/
+.cache/
+
+# =========================
+# Personal (Do Not Push)
+# Problem statements, ideation, private research,
+# guides, and hackathon reference materials.
+# =========================
+personal_guides/
+Ideation/
+Problem Statements/
+Research Ideation/
+**/Ideation/
+**/Problem Statements/
+**/Research Ideation/
+**/_extracted_text/
+**/*Hackathon*FAQs*
+**/*OpenEnv*Hackathon*Themes*
+**/*Participant*Help*Guide*
+**/*mythosreadyv95*
+**/*Cybersecurity*RL*Agent*
+**/*Research8*
+**/*Roadmap*New*PS*

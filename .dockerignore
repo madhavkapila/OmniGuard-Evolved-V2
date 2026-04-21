@@ -1,0 +1,25 @@
+# VCS
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments and outputs
+.venv/
+venv/
+.env
+outputs/
+checkpoints/
+adapters/
+reports/
+
+# Docs and workspace noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
