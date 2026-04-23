@@ -164,4 +164,5 @@ OmniGuard-Evolved-V2/
 
 ## License
 
-MIT
+Apache-2.0 license
+
