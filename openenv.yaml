@@ -1,0 +1,14 @@
+name: "OmniGuard-Evolved V2"
+description: "A partially observable, adaptive curriculum MCP gateway defense environment."
+version: "0.2.0"
+entrypoint: "server.env:OmniGuardStateMachine"
+dependencies:
+  - fastapi
+  - pydantic
+  - datasets
+  - httpx
+  - uvicorn
+  - numpy
+tasks:
+  - name: "default"
+    description: "Defend against dynamic, evolving prompt injection and MCP capability abuse."

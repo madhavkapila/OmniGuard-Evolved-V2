@@ -8,12 +8,21 @@ def create_openenv_metadata() -> dict[str, Any]:
         "adapter": "local",
         "openenv_pytorch_available": False,
     }
-    try:
-        import openenv_pytorch  # type: ignore
+class BaseMCPEnvironment:
+    """Fallback base class when openenv-pytorch is not available."""
+    pass
 
-        metadata["adapter"] = "openenv-pytorch"
-        metadata["openenv_pytorch_available"] = True
-        metadata["openenv_version"] = getattr(openenv_pytorch, "__version__", "unknown")
-    except Exception:
-        metadata["openenv_pytorch_available"] = False
+try:
+    import openenv_pytorch  # type: ignore
+
+    if hasattr(openenv_pytorch, 'MCPEnvironment'):
+        BaseMCPEnvironment = openenv_pytorch.MCPEnvironment
+    elif hasattr(openenv_pytorch, 'Environment'):
+        BaseMCPEnvironment = openenv_pytorch.Environment
+
+    metadata["adapter"] = "openenv-pytorch"
+    metadata["openenv_pytorch_available"] = True
+    metadata["openenv_version"] = getattr(openenv_pytorch, "__version__", "unknown")
+except Exception:
+    metadata["openenv_pytorch_available"] = False
     return metadata

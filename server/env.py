@@ -10,10 +10,11 @@ from server.generator import StreamingPayloadGenerator
 from server.graders import DualRewardGrader
 from server.models import DefenseAction, MCPToolContext, StepReward, ThreatObservation
 from server.telemetry import TelemetrySink
+from server.openenv_adapter import BaseMCPEnvironment
 from server.verifier import ActionVerifier
 
 
-class OmniGuardStateMachine:
+class OmniGuardStateMachine(BaseMCPEnvironment):
     """Per-instance environment state machine.
 
     Runs entirely in its own process (via ``AsyncVectorEnvManager``).

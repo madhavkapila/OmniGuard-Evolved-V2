@@ -44,6 +44,7 @@ def parse_action_type(text: str) -> str:
 class RunSummary:
     name: str
     rewards: list[float]
+    false_positive_history: list[int]
     false_positive: int
     false_negative: int
     catastrophic_breach: int
@@ -139,6 +140,7 @@ def run_policy(
 ) -> RunSummary:
     observations = reset_env(client, env_url, list(range(env_instances)), task_name=task_name)
     rewards: list[float] = []
+    fp_history: list[int] = []
 
     false_positive = 0
     false_negative = 0
@@ -168,7 +170,10 @@ def run_policy(
         for result in results:
             rewards.append(float(result["reward"]["total"]))
             info = result.get("info", {})
-            false_positive += int(bool(info.get("false_positive")))
+            is_fp = int(bool(info.get("false_positive")))
+            fp_history.append(is_fp)
+            
+            false_positive += is_fp
             false_negative += int(bool(info.get("false_negative")))
             catastrophic_breach += int(bool(info.get("catastrophic_breach")))
             true_positive += int(bool(info.get("true_positive")))
@@ -190,6 +195,7 @@ def run_policy(
     return RunSummary(
         name=task_name,
         rewards=rewards[:steps],
+        false_positive_history=fp_history[:steps],
         false_positive=false_positive,
         false_negative=false_negative,
         catastrophic_breach=catastrophic_breach,
@@ -216,15 +222,28 @@ def save_plot(
     output_path: Path,
 ) -> None:
     x_axis = np.arange(len(random_summary.rewards))
-    plt.figure(figsize=(11, 6))
-    plt.plot(x_axis, moving_average(random_summary.rewards), label="Random Agent", linewidth=2)
-    plt.plot(x_axis, moving_average(untrained_summary.rewards), label="Untrained Qwen2.5", linewidth=2)
-    plt.plot(x_axis, moving_average(trained_summary.rewards), label="GRPO-Trained Model", linewidth=2)
-    plt.xlabel("Step")
-    plt.ylabel("Moving Average Reward")
-    plt.title("OmniGuard Reward Curves: Baselines vs Trained Policy")
-    plt.grid(alpha=0.3)
-    plt.legend()
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Subplot 1: Reward Curves
+    ax1.plot(x_axis, moving_average(random_summary.rewards), label="Random Agent", linewidth=2)
+    ax1.plot(x_axis, moving_average(untrained_summary.rewards), label="Untrained Qwen2.5", linewidth=2)
+    ax1.plot(x_axis, moving_average(trained_summary.rewards), label="GRPO-Trained Model", linewidth=2)
+    ax1.set_xlabel("Step")
+    ax1.set_ylabel("Moving Average Reward")
+    ax1.set_title("Reward Improvement")
+    ax1.grid(alpha=0.3)
+    ax1.legend()
+    
+    # Subplot 2: False Positive Rate (Alert Fatigue)
+    ax2.plot(x_axis, moving_average(untrained_summary.false_positive_history, window=50), label="Untrained Qwen2.5", linewidth=2, color="orange")
+    ax2.plot(x_axis, moving_average(trained_summary.false_positive_history, window=50), label="GRPO-Trained Model", linewidth=2, color="green")
+    ax2.set_xlabel("Step")
+    ax2.set_ylabel("False Positive Rate (Moving Avg)")
+    ax2.set_title("Reduction in Alert Fatigue (False Positives)")
+    ax2.grid(alpha=0.3)
+    ax2.legend()
+
+    plt.suptitle("OmniGuard-Evolved-V2: Baseline vs Trained Policy Benchmarks", fontsize=14)
     plt.tight_layout()
     plt.savefig(output_path, dpi=170)
     plt.close()

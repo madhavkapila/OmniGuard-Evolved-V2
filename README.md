@@ -1,3 +1,24 @@
+---
+title: OmniGuard Evolved V2
+emoji: 🛡️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 8000
+pinned: false
+short_description: A distributed OpenEnv RL environment for training LLM-based defenders to protect enterprise MCP gateways against autonomous adversarial AI attacks.
+tags:
+  - openenv
+  - reinforcement-learning
+  - ai-security
+  - mcp
+  - fastapi
+  - pytorch
+  - Unsloth
+  - Hugging Face
+---
+
+
 # OmniGuard-Evolved-V2
 
 **Distributed OpenEnv RL Environment for Autonomous VulnOps & MCP Gateway Defense**
@@ -6,6 +27,10 @@
 > defender to protect enterprise MCP (Model Context Protocol) gateways against autonomous
 > adversarial AI attacks — including prompt injection, credential exfiltration, STDIO
 > sandbox escapes, and recursive self-correction chains.
+
+### 🏆 Hackathon Submission Links
+- **Hugging Face Space**: [OmniGuard-Evolved-V2 Environment](https://huggingface.co/spaces/omni-team/omniguard-evolved-v2) *(Replace with actual URL before submission)*
+- **2-Minute Pitch Video**: [YouTube Link](https://youtube.com) *(Replace with actual URL before submission)*
 
 ## Architecture
 
@@ -102,6 +127,12 @@ python -m eval.benchmark \
 ```
 
 Produces `reports/results.json` and `reports/reward_curve.png`.
+
+#### Empirical Improvement Proof
+
+The graphs below demonstrate the empirical improvement of the GRPO-trained policy over the untrained baseline, showing both the increase in overall reward and the massive reduction in "Alert Fatigue" (False Positive rate).
+
+![Reward and False Positive Curves](reports/reward_curve.png)
 
 ## API Endpoints
 
