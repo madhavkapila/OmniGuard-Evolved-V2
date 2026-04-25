@@ -1,25 +1,21 @@
-# VCS
 .git
-.gitignore
-
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Local environments and outputs
-.venv/
-venv/
+.venv
+__pycache__
+*.pyc
+*.pyo
+.mypy_cache
+.ruff_cache
+.pytest_cache
+node_modules
+*.egg-info
+dist
+build
+reports
+personal_guides
+demo
+training
+eval
+scripts
 .env
-outputs/
-checkpoints/
-adapters/
-reports/
-
-# Docs and workspace noise
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+*.zip
+*.tar.gz

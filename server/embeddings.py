@@ -19,7 +19,7 @@ class DynamicEmbedder:
         self._model_loaded = False
         self._tokenizer: Any = None
         self._model: Any = None
-        self._use_transformer = os.getenv("OMNIGUARD_USE_TRANSFORMER_EMBEDDER", "1") == "1"
+        self._use_transformer = os.getenv("OMNIGUARD_USE_TRANSFORMER_EMBEDDER", "0") == "1"
 
     def _try_load_model(self) -> None:
         if not self._use_transformer or self._model_loaded:

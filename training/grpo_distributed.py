@@ -341,7 +341,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-seq-length", type=int, default=2048)
     parser.add_argument("--max-prompt-length", type=int, default=768)
     parser.add_argument("--max-completion-length", type=int, default=128)
-    parser.add_argument("--env-instances", type=int, default=int(os.getenv("OMNIGUARD_ENV_INSTANCES", "32")))
+    parser.add_argument("--env-instances", type=int, default=int(os.getenv("OMNIGUARD_ENV_INSTANCES", "2")))
     parser.add_argument("--epochs", type=float, default=1.0)
     parser.add_argument("--learning-rate", type=float, default=2e-5)
     parser.add_argument("--per-device-batch-size", type=int, default=1)

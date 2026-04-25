@@ -24,9 +24,11 @@ class TelemetrySink:
         self._redis = None
         if self.redis_url:
             try:
-                import redis
+                import redis as _redis_lib
 
-                self._redis = redis.Redis.from_url(self.redis_url, decode_responses=True)
+                client = _redis_lib.Redis.from_url(self.redis_url, decode_responses=True)
+                client.ping()
+                self._redis = client
             except Exception:
                 self._redis = None
 

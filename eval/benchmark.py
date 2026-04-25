@@ -253,7 +253,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Benchmark OmniGuard-Evolved-V2 policies")
     parser.add_argument("--env-url", type=str, required=True)
     parser.add_argument("--steps", type=int, default=1000)
-    parser.add_argument("--env-instances", type=int, default=32)
+    parser.add_argument("--env-instances", type=int, default=2)
     parser.add_argument("--base-model", type=str, default="Qwen/Qwen2.5-3B-Instruct")
     parser.add_argument("--trained-adapter-path", type=str, default="")
     parser.add_argument("--output-dir", type=str, default="reports")

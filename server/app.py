@@ -37,10 +37,10 @@ except Exception:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    num_envs = int(os.getenv("OMNIGUARD_ENV_INSTANCES", "32"))
-    queue_size = int(os.getenv("OMNIGUARD_QUEUE_SIZE", "1000"))
-    max_latency_steps = int(os.getenv("OMNIGUARD_MAX_LATENCY_STEPS", "20"))
-    episode_length = int(os.getenv("OMNIGUARD_EPISODE_LENGTH", "16"))
+    num_envs = int(os.getenv("OMNIGUARD_ENV_INSTANCES", "2"))
+    queue_size = int(os.getenv("OMNIGUARD_QUEUE_SIZE", "128"))
+    max_latency_steps = int(os.getenv("OMNIGUARD_MAX_LATENCY_STEPS", "12"))
+    episode_length = int(os.getenv("OMNIGUARD_EPISODE_LENGTH", "8"))
 
     manager = AsyncVectorEnvManager(
         num_envs=num_envs,

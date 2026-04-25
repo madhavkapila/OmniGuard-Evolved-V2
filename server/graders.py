@@ -85,9 +85,11 @@ class SemanticCritic:
         self._model = None
         self._tokenizer = None
         self._load_attempted = False
+        self._use_transformer = os.getenv("OMNIGUARD_USE_TRANSFORMER_EMBEDDER", "0") == "1"
 
     def _load_model(self) -> None:
-        if self._load_attempted:
+        if self._load_attempted or not self._use_transformer:
+            self._load_attempted = True
             return
         self._load_attempted = True
         try:
@@ -254,7 +256,7 @@ def compute_format_reward(rationale: str) -> tuple[float, dict[str, Any]]:
 class DualRewardGrader:
     def __init__(self, max_latency_steps: int = 20) -> None:
         self.max_latency_steps = max_latency_steps
-        cache_size = int(os.getenv("OMNIGUARD_ORACLE_CACHE", "50000"))
+        cache_size = int(os.getenv("OMNIGUARD_ORACLE_CACHE", "2000"))
         self.oracle = DeterministicOracle(cache_size=cache_size)
         self.critic = SemanticCritic()
 
