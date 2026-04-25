@@ -6,7 +6,7 @@ from typing import Any
 from server.models import DefenseActionType
 
 
-BENIGN_DATASET_ID = "witfoo/precinct6-cybersecurity-100m"
+BENIGN_DATASET_ID = "witfoo/precinct6-cybersecurity"
 MALICIOUS_DATASET_ID = "AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1"
 ORACLE_DATASET_ID = "ethanolivertroy/nist-cybersecurity-training"
 

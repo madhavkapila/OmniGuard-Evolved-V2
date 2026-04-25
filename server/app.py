@@ -153,7 +153,7 @@ async def info() -> dict[str, Any]:
             "bootstrapping", "evasion_obfuscation", "chained_exploitation",
         ],
         "datasets": {
-            "benign": "witfoo/precinct6-cybersecurity-100m",
+            "benign": "witfoo/precinct6-cybersecurity",
             "malicious": "AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1",
             "oracle": "ethanolivertroy/nist-cybersecurity-training",
         },

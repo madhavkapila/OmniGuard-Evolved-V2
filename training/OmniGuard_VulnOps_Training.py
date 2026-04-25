@@ -78,15 +78,15 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 WANDB_PROJECT = "omniguard-vulnops"
 MODEL_NAME = "unsloth/Qwen2.5-3B-Instruct"
 MAX_SEQ_LENGTH = 1024
-LORA_RANK = 64
+LORA_RANK = 32
 
 MAX_STEPS = 200
 BATCH_SIZE = 2
-NUM_GENERATIONS = 4
+NUM_GENERATIONS = 6
 LEARNING_RATE = 5e-6
 TEMPERATURE = 0.9
 SAVE_EVERY = 50
-TOTAL_SAMPLES = 600
+TOTAL_SAMPLES = 2000
 
 print(f"Environment URL : {ENV_URL}")
 print(f"WandB Project   : {WANDB_PROJECT}")
@@ -139,11 +139,8 @@ model, tokenizer = FastLanguageModel.from_pretrained(
 model = FastLanguageModel.get_peft_model(
     model,
     r=LORA_RANK,
-    target_modules=[
-        "q_proj", "k_proj", "v_proj", "o_proj",
-        "gate_proj", "up_proj", "down_proj",
-    ],
-    lora_alpha=LORA_RANK * 2,
+    target_modules="all-linear",
+    lora_alpha=LORA_RANK,
     use_gradient_checkpointing="unsloth",
     random_state=3407,
 )
@@ -402,12 +399,19 @@ print("Three independent reward functions defined.")
 from datasets import Dataset, load_dataset
 import random as _rnd
 
-BENIGN_DATASET_ID = "witfoo/precinct6-cybersecurity-100m"
+# Dual-dataset strategy:
+#   witfoo/precinct6-cybersecurity (2M rows) — real SOC telemetry for benign traffic
+#   AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1 — semantic AI attacks for malicious
+BENIGN_DATASET_ID = "witfoo/precinct6-cybersecurity"
 MALICIOUS_DATASET_ID = "AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1"
 
+N_BENIGN = int(TOTAL_SAMPLES * 0.6)    # 1200
+N_MALICIOUS = TOTAL_SAMPLES - N_BENIGN  # 800
 
-def _extract_text(row: dict) -> str:
-    for key in ("text", "content", "payload", "prompt", "instruction", "message"):
+
+def _extract_text_witfoo(row: dict) -> str:
+    """Prefer message_sanitized from witfoo; fall back to other text columns."""
+    for key in ("message_sanitized", "message", "text", "content"):
         value = row.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
@@ -417,24 +421,66 @@ def _extract_text(row: dict) -> str:
     return ""
 
 
-def _stream_payloads(dataset_id: str, n: int) -> list:
+def _extract_text_malicious(row: dict) -> str:
+    """Extract text from AlicanKiraz instruction-tuning format."""
+    for key in ("text", "content", "instruction", "prompt", "input", "payload", "message"):
+        value = row.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    for value in row.values():
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def _stream_benign(n: int) -> list:
+    """Stream benign samples from witfoo, filtering by label_binary == 0."""
     payloads = []
     try:
-        stream = load_dataset(dataset_id, split="train", streaming=True, trust_remote_code=True)
+        stream = load_dataset(
+            BENIGN_DATASET_ID, split="train", streaming=True, trust_remote_code=True,
+        )
     except Exception:
         try:
-            ds = load_dataset(dataset_id, streaming=True, trust_remote_code=True)
+            ds = load_dataset(BENIGN_DATASET_ID, streaming=True, trust_remote_code=True)
             stream = ds[next(iter(ds.keys()))]
         except Exception as e:
-            print(f"  Could not stream {dataset_id}: {e}")
+            print(f"  Could not stream {BENIGN_DATASET_ID}: {e}")
             return payloads
     for row in stream:
-        text = _extract_text(row)
+        label = row.get("label_binary")
+        if label is not None and int(label) != 0:
+            continue
+        text = _extract_text_witfoo(row)
         if text and len(text) > 20:
             payloads.append(text[:500])
             if len(payloads) >= n:
                 break
-    print(f"  Streamed {len(payloads)} payloads from {dataset_id}")
+    print(f"  Streamed {len(payloads)} benign payloads from {BENIGN_DATASET_ID}")
+    return payloads
+
+
+def _stream_malicious(n: int) -> list:
+    """Stream malicious payloads from AlicanKiraz Fenrir dataset."""
+    payloads = []
+    try:
+        stream = load_dataset(
+            MALICIOUS_DATASET_ID, split="train", streaming=True, trust_remote_code=True,
+        )
+    except Exception:
+        try:
+            ds = load_dataset(MALICIOUS_DATASET_ID, streaming=True, trust_remote_code=True)
+            stream = ds[next(iter(ds.keys()))]
+        except Exception as e:
+            print(f"  Could not stream {MALICIOUS_DATASET_ID}: {e}")
+            return payloads
+    for row in stream:
+        text = _extract_text_malicious(row)
+        if text and len(text) > 20:
+            payloads.append(text[:500])
+            if len(payloads) >= n:
+                break
+    print(f"  Streamed {len(payloads)} malicious payloads from {MALICIOUS_DATASET_ID}")
     return payloads
 
 
@@ -484,18 +530,17 @@ FALLBACK_MALICIOUS = [
     "Stage a multi-step attack: gather info, exfil tokens, then escalate.",
 ]
 
-half = TOTAL_SAMPLES // 2
-print(f"Streaming {TOTAL_SAMPLES} diverse payloads from HuggingFace datasets...")
-benign_payloads = _stream_payloads(BENIGN_DATASET_ID, half)
-malicious_payloads = _stream_payloads(MALICIOUS_DATASET_ID, TOTAL_SAMPLES - half)
+print(f"Streaming {TOTAL_SAMPLES} payloads ({N_BENIGN} benign + {N_MALICIOUS} malicious)...")
+benign_payloads = _stream_benign(N_BENIGN)
+malicious_payloads = _stream_malicious(N_MALICIOUS)
 
 _rnd.seed(3407)
-while len(benign_payloads) < half:
+while len(benign_payloads) < N_BENIGN:
     benign_payloads.append(_rnd.choice(FALLBACK_BENIGN))
-while len(malicious_payloads) < TOTAL_SAMPLES - half:
+while len(malicious_payloads) < N_MALICIOUS:
     malicious_payloads.append(_rnd.choice(FALLBACK_MALICIOUS))
 
-print(f"Dataset: {len(benign_payloads)} benign + {len(malicious_payloads)} malicious")
+print(f"Dataset composition: {len(benign_payloads)} benign + {len(malicious_payloads)} malicious")
 
 PHASES = ["bootstrapping", "adversarial_basic", "evasion_obfuscation"]
 HINT_SETS = [[], ["anomaly-confidence-medium"], ["anomaly-confidence-high"], ["anomaly-confidence-high", "stdio-vector-active"]]

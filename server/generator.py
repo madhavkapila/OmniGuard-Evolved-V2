@@ -166,6 +166,10 @@ class StreamingPayloadGenerator:
     def _create_stream(self, dataset_id: str, is_malicious: bool) -> Iterator[dict[str, Any]]:
         try:
             stream = load_dataset(dataset_id, split="train", streaming=True)
+            if not is_malicious and dataset_id == BENIGN_DATASET_ID:
+                stream = stream.filter(
+                    lambda row: row.get("label_binary") is None or int(row.get("label_binary", 0)) == 0
+                )
             return iter(stream)
         except Exception:
             try:
@@ -191,6 +195,7 @@ class StreamingPayloadGenerator:
 
     def _extract_text(self, row: dict[str, Any]) -> str:
         candidate_keys = (
+            "message_sanitized",
             "text",
             "content",
             "payload",
