@@ -24,7 +24,7 @@ REQUIRED_IMPORTS = [
 
 OPTIONAL_IMPORTS = [
     "unsloth",
-    "openenv_pytorch",
+    "openenv",
     "peft",
     "redis",
 ]

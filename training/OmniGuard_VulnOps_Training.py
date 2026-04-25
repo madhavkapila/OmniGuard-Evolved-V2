@@ -80,13 +80,13 @@ MODEL_NAME = "unsloth/Qwen2.5-3B-Instruct"
 MAX_SEQ_LENGTH = 1024
 LORA_RANK = 32
 
-MAX_STEPS = 200
+MAX_STEPS = 800
 BATCH_SIZE = 2
 NUM_GENERATIONS = 6
 LEARNING_RATE = 5e-6
 TEMPERATURE = 0.9
-SAVE_EVERY = 50
-TOTAL_SAMPLES = 2000
+SAVE_EVERY = 100
+TOTAL_SAMPLES = 10000
 
 print(f"Environment URL : {ENV_URL}")
 print(f"WandB Project   : {WANDB_PROJECT}")
@@ -139,7 +139,10 @@ model, tokenizer = FastLanguageModel.from_pretrained(
 model = FastLanguageModel.get_peft_model(
     model,
     r=LORA_RANK,
-    target_modules="all-linear",
+    target_modules=[
+        "q_proj", "k_proj", "v_proj", "o_proj",
+        "gate_proj", "up_proj", "down_proj",
+    ],
     lora_alpha=LORA_RANK,
     use_gradient_checkpointing="unsloth",
     random_state=3407,
@@ -403,10 +406,11 @@ import random as _rnd
 #   witfoo/precinct6-cybersecurity (2M rows) — real SOC telemetry for benign traffic
 #   AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1 — semantic AI attacks for malicious
 BENIGN_DATASET_ID = "witfoo/precinct6-cybersecurity"
+BENIGN_CONFIG = "signals"
 MALICIOUS_DATASET_ID = "AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1"
 
-N_BENIGN = int(TOTAL_SAMPLES * 0.6)    # 1200
-N_MALICIOUS = TOTAL_SAMPLES - N_BENIGN  # 800
+N_BENIGN = int(TOTAL_SAMPLES * 0.6)
+N_MALICIOUS = TOTAL_SAMPLES - N_BENIGN
 
 
 def _extract_text_witfoo(row: dict) -> str:
@@ -434,18 +438,18 @@ def _extract_text_malicious(row: dict) -> str:
 
 
 def _stream_benign(n: int) -> list:
-    """Stream benign samples from witfoo, filtering by label_binary == 0."""
+    """Stream benign samples from witfoo 'signals' config, filtering by label_binary == 0."""
     payloads = []
     try:
         stream = load_dataset(
-            BENIGN_DATASET_ID, split="train", streaming=True, trust_remote_code=True,
+            BENIGN_DATASET_ID, BENIGN_CONFIG, split="train", streaming=True,
         )
     except Exception:
         try:
-            ds = load_dataset(BENIGN_DATASET_ID, streaming=True, trust_remote_code=True)
+            ds = load_dataset(BENIGN_DATASET_ID, BENIGN_CONFIG, streaming=True)
             stream = ds[next(iter(ds.keys()))]
         except Exception as e:
-            print(f"  Could not stream {BENIGN_DATASET_ID}: {e}")
+            print(f"  Could not stream {BENIGN_DATASET_ID}/{BENIGN_CONFIG}: {e}")
             return payloads
     for row in stream:
         label = row.get("label_binary")
@@ -465,11 +469,11 @@ def _stream_malicious(n: int) -> list:
     payloads = []
     try:
         stream = load_dataset(
-            MALICIOUS_DATASET_ID, split="train", streaming=True, trust_remote_code=True,
+            MALICIOUS_DATASET_ID, split="train", streaming=True,
         )
     except Exception:
         try:
-            ds = load_dataset(MALICIOUS_DATASET_ID, streaming=True, trust_remote_code=True)
+            ds = load_dataset(MALICIOUS_DATASET_ID, streaming=True)
             stream = ds[next(iter(ds.keys()))]
         except Exception as e:
             print(f"  Could not stream {MALICIOUS_DATASET_ID}: {e}")

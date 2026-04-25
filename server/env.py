@@ -241,6 +241,26 @@ class OmniGuardStateMachine(BaseMCPEnvironment):
         )
         return snapshot
 
+    def state(self) -> dict[str, Any]:
+        """Gym-style state accessor (OpenEnv compliance)."""
+        return {
+            "env_id": self.env_id,
+            "task_name": self.current_task_name,
+            "step_count": self.step_count,
+            "done": self.done,
+            "episode_reward": self.current_episode_reward,
+            "curriculum_phase": self.curriculum.current_phase(),
+            "moving_reward": self.curriculum.moving_reward(),
+            "tp": self._tp,
+            "tn": self._tn,
+            "fp": self._fp,
+            "fn": self._fn,
+        }
+
+    def close(self) -> None:
+        """Gym-style cleanup (OpenEnv compliance). Alias for shutdown."""
+        self.shutdown()
+
     def shutdown(self) -> None:
         self.generator.shutdown()
         self.grader.close()

@@ -39,7 +39,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r /app/requirements.txt
+    && pip install --no-cache-dir -r /app/requirements.txt \
+    && pip install --no-cache-dir --no-deps openenv-core>=0.2.3
 
 COPY server      /app/server
 COPY config      /app/config

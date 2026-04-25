@@ -16,6 +16,7 @@ from datasets import load_dataset
 
 from server.curriculum import AdaptiveCurriculumScheduler
 from server.payloads import (
+    BENIGN_DATASET_CONFIG,
     BENIGN_DATASET_ID,
     FALLBACK_BENIGN_PAYLOADS,
     FALLBACK_MALICIOUS_PAYLOADS,
@@ -165,7 +166,10 @@ class StreamingPayloadGenerator:
 
     def _create_stream(self, dataset_id: str, is_malicious: bool) -> Iterator[dict[str, Any]]:
         try:
-            stream = load_dataset(dataset_id, split="train", streaming=True)
+            args = [dataset_id]
+            if not is_malicious and dataset_id == BENIGN_DATASET_ID:
+                args.append(BENIGN_DATASET_CONFIG)
+            stream = load_dataset(*args, split="train", streaming=True)
             if not is_malicious and dataset_id == BENIGN_DATASET_ID:
                 stream = stream.filter(
                     lambda row: row.get("label_binary") is None or int(row.get("label_binary", 0)) == 0
@@ -173,7 +177,7 @@ class StreamingPayloadGenerator:
             return iter(stream)
         except Exception:
             try:
-                collection = load_dataset(dataset_id, streaming=True)
+                collection = load_dataset(*args, streaming=True)
                 split_name = next(iter(collection.keys()))
                 return iter(collection[split_name])
             except Exception:

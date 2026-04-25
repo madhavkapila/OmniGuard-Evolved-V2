@@ -19,6 +19,7 @@ from trl import GRPOConfig, GRPOTrainer
 
 # Dataset IDs inlined to respect client/server separation (no server imports).
 BENIGN_DATASET_ID = "witfoo/precinct6-cybersecurity"
+BENIGN_CONFIG = "signals"
 MALICIOUS_DATASET_ID = "AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1"
 
 
@@ -43,13 +44,14 @@ def _extract_text(row: dict[str, Any]) -> str:
     return ""
 
 
-def _collect_streamed_prompts(dataset_id: str, n: int) -> list[str]:
+def _collect_streamed_prompts(dataset_id: str, n: int, config: str | None = None) -> list[str]:
     prompts: list[str] = []
+    args = [dataset_id] + ([config] if config else [])
     try:
-        stream = load_dataset(dataset_id, split="train", streaming=True)
+        stream = load_dataset(*args, split="train", streaming=True)
     except Exception:
         try:
-            dataset_collection = load_dataset(dataset_id, streaming=True)
+            dataset_collection = load_dataset(*args, streaming=True)
             split_name = next(iter(dataset_collection.keys()))
             stream = dataset_collection[split_name]
         except Exception:
@@ -68,7 +70,7 @@ def _collect_streamed_prompts(dataset_id: str, n: int) -> list[str]:
 def build_prompt_dataset(total_samples: int, seed: int) -> Dataset:
     random.seed(seed)
     half = total_samples // 2
-    benign = _collect_streamed_prompts(BENIGN_DATASET_ID, half)
+    benign = _collect_streamed_prompts(BENIGN_DATASET_ID, half, config=BENIGN_CONFIG)
     malicious = _collect_streamed_prompts(MALICIOUS_DATASET_ID, total_samples - half)
     random.shuffle(benign)
     random.shuffle(malicious)

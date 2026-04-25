@@ -41,7 +41,7 @@ dev = [
   "mypy>=1.11.2"
 ]
 openenv = [
-  "openenv-pytorch>=0.1.0"
+  "openenv-core>=0.2.3"
 ]
 
 [tool.setuptools.packages.find]
