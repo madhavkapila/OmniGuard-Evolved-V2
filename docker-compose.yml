@@ -60,7 +60,8 @@ services:
         limits:
           memory: 4G
     environment:
-      OMNIGUARD_ENV_INSTANCES: "32"
+      OMNIGUARD_ENV_INSTANCES: "4"
+      OMNIGUARD_USE_TRANSFORMER_EMBEDDER: "0"
       OMNIGUARD_QUEUE_SIZE: "1000"
       OMNIGUARD_MAX_LATENCY_STEPS: "20"
       OMNIGUARD_EPISODE_LENGTH: "16"
