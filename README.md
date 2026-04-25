@@ -28,9 +28,14 @@ tags:
 > adversarial AI attacks — including prompt injection, credential exfiltration, STDIO
 > sandbox escapes, and recursive self-correction chains.
 
-### 🏆 Hackathon Submission Links[Mocked Till Now]
-- **Hugging Face Space**: [OmniGuard-Evolved-V2 Environment](https://huggingface.co/spaces/omni-team/omniguard-evolved-v2) *(Replace with actual URL before submission)*
-- **2-Minute Pitch Video**: [YouTube Link](https://youtube.com) *(Replace with actual URL before submission)*
+### 🏆 Hackathon Submission
+
+| Artifact | Link |
+|----------|------|
+| **HuggingFace Space** | [OmniGuard-Evolved-V2 Environment](https://huggingface.co/spaces/TO_BE_UPDATED_BEFORE_SUBMISSION) |
+| **2-Minute Pitch Video** | [YouTube](https://youtube.com/TO_BE_UPDATED_BEFORE_SUBMISSION) |
+| **WandB Training Dashboard** | [View training curves](https://wandb.ai/TO_BE_UPDATED_BEFORE_SUBMISSION) |
+| **Live SOC Demo** | Open `demo/index.html` → Connect to HF Space URL |
 
 ## Architecture
 
@@ -130,7 +135,9 @@ Produces `reports/results.json` and `reports/reward_curve.png`.
 
 #### Empirical Improvement Proof
 
-The graphs below demonstrate the empirical improvement of the GRPO-trained policy over the untrained baseline, showing both the increase in overall reward and the massive reduction in "Alert Fatigue" (False Positive rate).
+The graphs below demonstrate the projected empirical improvement of the GRPO-trained policy over the untrained baseline, showing both the increase in overall reward and the massive reduction in "Alert Fatigue" (False Positive rate).
+
+> **Note**: The plot below shows projected training curves based on environment reward dynamics. It will be replaced with real WandB-exported curves after the onsite training session.
 
 ![Reward and False Positive Curves](reports/reward_curve.png)
 
