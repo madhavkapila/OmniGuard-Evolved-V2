@@ -145,8 +145,12 @@ class StreamingPayloadGenerator:
         self._queue = AsyncQueueBridge(maxsize=queue_size)
         self._mutator = PayloadMutator(seed=seed)
         self._stop_event = threading.Event()
-        self._benign_stream: Iterator[dict[str, Any]] | None = None
-        self._malicious_stream: Iterator[dict[str, Any]] | None = None
+        # Start with fallback iterators immediately so workers init fast.
+        # Real HF streams are opened lazily on first prefetch cycle.
+        self._benign_stream: Iterator[dict[str, Any]] = self._iter_fallback_rows(is_malicious=False)
+        self._malicious_stream: Iterator[dict[str, Any]] = self._iter_fallback_rows(is_malicious=True)
+        self._benign_upgraded = False
+        self._malicious_upgraded = False
         self._prefetch_thread = threading.Thread(
             target=self._prefetch_loop,
             daemon=True,
@@ -171,13 +175,18 @@ class StreamingPayloadGenerator:
             except Exception:
                 return self._iter_fallback_rows(is_malicious=is_malicious)
 
+    def _try_upgrade_stream(self, is_malicious: bool) -> None:
+        """Attempt to upgrade from fallback to real HF dataset stream (once)."""
+        if is_malicious and not self._malicious_upgraded:
+            self._malicious_upgraded = True
+            self._malicious_stream = self._create_stream(MALICIOUS_DATASET_ID, is_malicious=True)
+        elif not is_malicious and not self._benign_upgraded:
+            self._benign_upgraded = True
+            self._benign_stream = self._create_stream(BENIGN_DATASET_ID, is_malicious=False)
+
     def _ensure_stream(self, is_malicious: bool) -> Iterator[dict[str, Any]]:
         if is_malicious:
-            if self._malicious_stream is None:
-                self._malicious_stream = self._create_stream(MALICIOUS_DATASET_ID, is_malicious=True)
             return self._malicious_stream
-        if self._benign_stream is None:
-            self._benign_stream = self._create_stream(BENIGN_DATASET_ID, is_malicious=False)
         return self._benign_stream
 
     def _extract_text(self, row: dict[str, Any]) -> str:
@@ -280,13 +289,21 @@ class StreamingPayloadGenerator:
 
     def _prefetch_loop(self) -> None:
         backoff = 0.05
+        samples_produced = 0
         while not self._stop_event.is_set():
             try:
+                # After serving initial fallback batch, upgrade to real streams
+                if samples_produced == self.episode_length and not self._benign_upgraded:
+                    self._try_upgrade_stream(is_malicious=False)
+                if samples_produced == self.episode_length + 1 and not self._malicious_upgraded:
+                    self._try_upgrade_stream(is_malicious=True)
+
                 profile = self.scheduler.profile()
                 is_malicious = self._rng.random() < profile.malicious_ratio
                 sample = self._build_payload(is_malicious=is_malicious, profile_phase=profile.phase)
                 inserted = self._queue.put(sample, timeout=2.0)
                 if inserted:
+                    samples_produced += 1
                     backoff = 0.05
                     continue
                 backoff = min(0.5, backoff * 1.5)

@@ -15,7 +15,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TRANSFORMERS_CACHE=/tmp/hf-cache \
     HF_DATASETS_CACHE=/tmp/hf-cache \
     OMNIGUARD_HOST=0.0.0.0 \
-    OMNIGUARD_PORT=8000 \
+    OMNIGUARD_PORT=7860 \
     # ---- HF Spaces memory-safe defaults (override in Space "Variables") ----
     OMNIGUARD_ENV_INSTANCES=2 \
     OMNIGUARD_QUEUE_SIZE=128 \
@@ -53,7 +53,7 @@ RUN groupadd -r omniguard && useradd -r -g omniguard -u 1000 -d /app omniguard \
     && chown -R omniguard:omniguard /app /tmp/hf-cache
 USER omniguard
 
-EXPOSE 8000
+EXPOSE 7860
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -fsS http://localhost:${OMNIGUARD_PORT}/healthz || exit 1

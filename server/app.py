@@ -186,7 +186,7 @@ def run() -> None:
     uvicorn.run(
         "server.app:app",
         host=os.getenv("OMNIGUARD_HOST", "0.0.0.0"),
-        port=int(os.getenv("OMNIGUARD_PORT", "8000")),
+        port=int(os.getenv("OMNIGUARD_PORT", "7860")),
         loop=uvicorn_loop,
         http="httptools",
         workers=int(os.getenv("OMNIGUARD_UVICORN_WORKERS", "1")),
