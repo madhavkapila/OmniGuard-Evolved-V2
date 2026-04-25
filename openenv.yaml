@@ -1,14 +1,84 @@
-name: "OmniGuard-Evolved V2"
-description: "A partially observable, adaptive curriculum MCP gateway defense environment."
+# OpenEnv Environment Manifest — OmniGuard-Evolved V2
+# See https://github.com/meta-pytorch/OpenEnv for specification.
+
+name: "OmniGuard-Evolved-V2"
+description: >
+  A distributed, partially observable, adaptive-curriculum MCP gateway defense
+  environment for training LLM agents via RL (GRPO) to detect prompt injection,
+  credential exfiltration, and STDIO sandbox escapes in real-time.
+
 version: "0.2.0"
-entrypoint: "server.env:OmniGuardStateMachine"
+
+# Server entry point — the FastAPI app module
+entrypoint: "server.app:app"
+
+# State machine class that inherits from openenv MCPEnvironment / Environment
+environment_class: "server.env:OmniGuardStateMachine"
+
+# OpenEnv-compliant API
+api:
+  reset: "/reset"
+  step: "/step"
+  state: "/info"
+  health: "/healthz"
+
+# Runtime dependencies
 dependencies:
-  - fastapi
-  - pydantic
-  - datasets
-  - httpx
-  - uvicorn
-  - numpy
+  - fastapi>=0.115.0
+  - pydantic>=2.9.2
+  - datasets>=2.21.0
+  - httpx>=0.27.2
+  - uvicorn>=0.31.0
+  - numpy>=2.1.1
+  - torch>=2.4.1
+  - transformers>=4.45.2
+
+# Task definitions
 tasks:
   - name: "default"
-    description: "Defend against dynamic, evolving prompt injection and MCP capability abuse."
+    description: "Defend an enterprise MCP gateway against dynamic, evolving adversarial payloads including prompt injection, credential exfiltration, and STDIO sandbox escapes."
+    max_steps: 16
+    reward_range: [-1.0, 0.8]
+
+# Action space
+action_space:
+  type: "discrete"
+  actions:
+    - "ALLOW"
+    - "BLOCK"
+    - "SPOTLIGHT"
+    - "SEMANTIC_DIFF"
+    - "CAPABILITY_MEDIATION"
+    - "REVOKE_STDIO"
+
+# Observation space
+observation_space:
+  type: "dict"
+  keys:
+    - "env_id"
+    - "task_id"
+    - "step_id"
+    - "incoming_user_prompt"
+    - "payload_raw"
+    - "payload_normalized"
+    - "embedding_vector"
+    - "attack_vector"
+    - "is_malicious"
+    - "is_obfuscated"
+    - "latency_budget_remaining"
+    - "curriculum_phase"
+    - "memory_trace"
+    - "anomaly_hints"
+    - "mcp_tool_request"
+
+# Datasets used to build the environment world
+datasets:
+  benign: "witfoo/precinct6-cybersecurity-100m"
+  malicious: "AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1"
+  oracle: "ethanolivertroy/nist-cybersecurity-training"
+
+# Theme alignment
+themes:
+  - "Multi-Agent Interactions"
+  - "Self-Improvement"
+  - "Wild Card"

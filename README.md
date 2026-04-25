@@ -28,7 +28,7 @@ tags:
 > adversarial AI attacks — including prompt injection, credential exfiltration, STDIO
 > sandbox escapes, and recursive self-correction chains.
 
-### 🏆 Hackathon Submission Links
+### 🏆 Hackathon Submission Links[Mocked Till Now]
 - **Hugging Face Space**: [OmniGuard-Evolved-V2 Environment](https://huggingface.co/spaces/omni-team/omniguard-evolved-v2) *(Replace with actual URL before submission)*
 - **2-Minute Pitch Video**: [YouTube Link](https://youtube.com) *(Replace with actual URL before submission)*
 

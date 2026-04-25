@@ -17,7 +17,9 @@ from datasets import Dataset, load_dataset
 from transformers import TrainerCallback
 from trl import GRPOConfig, GRPOTrainer
 
-from server.payloads import BENIGN_DATASET_ID, MALICIOUS_DATASET_ID
+# Dataset IDs inlined to respect client/server separation (no server imports).
+BENIGN_DATASET_ID = "witfoo/precinct6-cybersecurity-100m"
+MALICIOUS_DATASET_ID = "AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1"
 
 
 ACTION_TYPES = [
