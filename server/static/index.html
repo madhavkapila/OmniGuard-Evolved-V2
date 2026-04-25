@@ -331,11 +331,11 @@ footer a{color:var(--cyan)}
   </div>
   <div class="endpoint">
     <span class="method post">POST</span><span class="path">/reset</span>
-    <div class="desc">Reset one or more environment instances. Accepts <code>{"env_ids":[0,1],"task_name":"demo","seed":42}</code>.</div>
+    <div class="desc">Reset one or more environment instances. Accepts <code>{"items":[{"env_id":0,"task_name":"demo"}]}</code>.</div>
   </div>
   <div class="endpoint">
     <span class="method post">POST</span><span class="path">/step</span>
-    <div class="desc">Submit a batch of defense actions. Accepts <code>{"actions":[{"env_id":0,"action":"ALLOW"},...]}</code>. Returns observations, rewards, done flags.</div>
+    <div class="desc">Submit a batch of defense actions. Accepts <code>{"actions":[{"env_id":0,"action_type":"ALLOW"},...]}</code>. Returns observations, rewards, done flags.</div>
   </div>
 </div>
 </div>
@@ -506,7 +506,7 @@ function runStep(){
 async function liveStep(){
   if(!envOnline){runStep();return;}
   try{
-    const rr=await fetch(BASE+'/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({env_ids:[liveEnvId],task_name:'soc-demo',seed:Date.now()%99999})});
+    const rr=await fetch(BASE+'/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:[{env_id:liveEnvId,task_name:'soc-demo'}]})});
     if(!rr.ok){runStep();return;}
     const rd=await rr.json();
     const obs=rd.observations?.[0];
@@ -518,7 +518,7 @@ async function liveStep(){
     log('logU',`${ua} → ${ur.v} (${ur.s>0?'+':''}${ur.s.toFixed(1)})`,ur.c);
     setVerdict('vU',ua,ur);
     const ta=trainedAction(p);
-    const sr=await fetch(BASE+'/step',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actions:[{env_id:liveEnvId,action:ta}]})});
+    const sr=await fetch(BASE+'/step',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actions:[{env_id:liveEnvId,action_type:ta}]})});
     if(sr.ok){
       const sd=await sr.json();
       const rew=sd.results?.[0]?.reward??reward(ta,p).s;

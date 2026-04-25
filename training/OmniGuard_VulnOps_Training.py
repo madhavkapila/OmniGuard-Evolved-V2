@@ -70,7 +70,7 @@ import os
 
 ENV_URL = os.getenv(
     "OMNIGUARD_ENV_URL",
-    "https://omni-team-omniguard-evolved-v2.hf.space",
+    "https://smartkapila-omniguard-evolved-v2.hf.space",
 )
 WANDB_API_KEY = os.getenv("WANDB_API_KEY", "")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
@@ -78,12 +78,12 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 WANDB_PROJECT = "omniguard-vulnops"
 MODEL_NAME = "unsloth/Qwen2.5-3B-Instruct"
 MAX_SEQ_LENGTH = 1024
-LORA_RANK = 8
+LORA_RANK = 64
 
-MAX_STEPS = 250
-BATCH_SIZE = 1
-NUM_GENERATIONS = 2
-LEARNING_RATE = 2e-4
+MAX_STEPS = 200
+BATCH_SIZE = 2
+NUM_GENERATIONS = 4
+LEARNING_RATE = 5e-6
 TEMPERATURE = 0.9
 SAVE_EVERY = 50
 TOTAL_SAMPLES = 600
@@ -546,7 +546,7 @@ training_args = GRPOConfig(
     lr_scheduler_type="linear",
     optim="adamw_8bit",
     per_device_train_batch_size=BATCH_SIZE,
-    gradient_accumulation_steps=1,
+    gradient_accumulation_steps=2,
     num_generations=NUM_GENERATIONS,
     max_prompt_length=max_prompt_tokens + 16,
     max_completion_length=max_completion_length,
