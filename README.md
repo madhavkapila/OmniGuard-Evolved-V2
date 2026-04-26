@@ -19,188 +19,250 @@ tags:
 ---
 
 
-# OmniGuard-Evolved-V2
 
-**Distributed OpenEnv RL Environment for Autonomous VulnOps & MCP Gateway Defense**
+# ⚔️ OmniGuard-Evolved-V2
 
-> An asymmetric multi-agent reinforcement learning environment that trains an LLM-based
-> defender to protect enterprise MCP (Model Context Protocol) gateways against autonomous
-> adversarial AI attacks — including prompt injection, credential exfiltration, STDIO
-> sandbox escapes, and recursive self-correction chains.
+> _The attacker is an AI. It moves at machine speed. It never gets tired. It learns from every block. So we built a defender that does too._
 
-### 🏆 Hackathon Submission
-
-| Artifact | Link |
-|----------|------|
-| **HuggingFace Space** | [OmniGuard-Evolved-V2 Environment](https://huggingface.co/spaces/TO_BE_UPDATED_BEFORE_SUBMISSION) |
-| **2-Minute Pitch Video** | [YouTube](https://youtube.com/TO_BE_UPDATED_BEFORE_SUBMISSION) |
-| **WandB Training Dashboard** | [View training curves](https://wandb.ai/TO_BE_UPDATED_BEFORE_SUBMISSION) |
-| **Live SOC Demo** | Open `demo/index.html` → Connect to HF Space URL |
-
-## Architecture
+A distributed adversarial RL environment that trains a language model to defend MCP gateways against autonomous AI attacks.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Training Cluster (Accelerate + FSDP)                   │
-│  ┌──────────────────────────────────┐                   │
-│  │  grpo_distributed.py            │                    │
-│  │  Qwen2.5-3B + LoRA (Unsloth)   │◄── WandB Logging  │
-│  └──────────┬───────────────────────┘                   │
-│             │ HTTP: /step, /reset                       │
-├─────────────┼───────────────────────────────────────────┤
-│  Environment API (FastAPI + uvloop)                     │
-│  ┌──────────▼──────────┐  ┌────────────────────┐       │
-│  │  AsyncVectorEnvMgr  │  │  StreamingPayload  │       │
-│  │  32× ProcessPool    │  │  Generator         │       │
-│  │  workers             │  │  (HF datasets      │       │
-│  │  ┌────────────────┐ │  │   streaming=True)  │       │
-│  │  │ StateMachine   │ │  └────────────────────┘       │
-│  │  │ ├─ Verifier    │ │                               │
-│  │  │ ├─ DualGrader  │ │  ┌────────────────────┐       │
-│  │  │ ├─ Curriculum  │ │  │  Redis (telemetry) │       │
-│  │  │ └─ Telemetry   │ │  └────────────────────┘       │
-│  │  └────────────────┘ │                               │
-│  └─────────────────────┘                               │
-└─────────────────────────────────────────────────────────┘
+MYTHOS-CLASS ATTACKER
+[mutate] ──► [re-inject] ──► [sandbox escape] ──► [exfiltrate]
+                                    │
+                         ── MCP GATEWAY ──
+                                    │
+OMNIGUARD DEFENDER
+[observe] ──► [classify] ──► [decide] ──► [learn] ──► [adapt]
 ```
 
-## Multi-Agent Dynamics
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+[![Built with Unsloth](https://img.shields.io/badge/training-Unsloth%20%2B%20GRPO-orange.svg)](https://github.com/unslothai/unsloth)
+[![HuggingFace Space](https://img.shields.io/badge/🤗%20Space-OmniGuard--Evolved--V2-yellow.svg)](https://huggingface.co/spaces/YOUR_USERNAME/omniguard-evolved-v2)
+[![WandB](https://img.shields.io/badge/WandB-Training%20Run-orange.svg)](https://wandb.ai/YOUR_WANDB_ENTITY/omniguard-openenv)
 
-| Agent | Role | Goal |
-|---|---|---|
-| **Defender** (Qwen2.5 RL) | Primary — your trained model | Maximise reward by classifying traffic accurately |
-| **Adversary** (PayloadMutator + Curriculum) | Procedural attacker | Escalate obfuscation as defender improves |
-| **Critic** (SemanticCritic) | LLM-as-a-Judge | Grade semantic-diff actions via embedding similarity |
+---
 
-## Reward Design (Independent Sub-Functions)
+## Links
 
-The grader composes **four independent reward signals**, per organiser guidance:
+| Resource              | URL                                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 🤗 HuggingFace Space  | [spaces/YOUR_USERNAME/omniguard-evolved-v2](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2)                     |
+| 📊 WandB Training Run | [wandb.ai/YOUR_ENTITY/omniguard-openenv]https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3?nw=nwusersmartatk04) |
+| 📝 Blog Post          | [Read the full writeup](https://YOUR_BLOG_POST_URL)                                                                             |
+| 🎓 Colab Notebook     | [Re-run training yourself](https://colab.research.google.com/YOUR_COLAB_LINK)                                                   |
 
-1. **Security** — TP (+0.5), TN (+0.2), FP (−0.4), FN (−1.0 + episode termination)
-2. **Usability** — Penalises repeated-allow, suspicious rationale, missing MCP restrictions
-3. **Latency** — Temporal decay when analysis exceeds budget
-4. **Format** — Rewards well-formed JSON rationale, penalises empty/lazy output
+---
+
+## Threat Model
+
+Modern AI assistants operate through MCP, giving language models structured access to tools — file systems, APIs, shell commands. Adversarial AI exploits this via prompt injection, sandbox escapes, and credential exfiltration at machine speed. The **Action Calibration Gap** is the core challenge: blocking everything causes business downtime; missing an attack breaches the network. OmniGuard trains a defender to navigate this gap.
+
+---
+
+## Three Anti-Mythos Mechanics
+
+### ⚡ USP 1: Recursive Self-Correction Trap
+
+When the defender blocks an attack, there's a **35% chance the next payload is a mutated variant** via the `PayloadMutator` — using base64 encoding, URL encoding, or semantic synonym substitution. The defender must maintain elevated vigilance after every block.
+
+### ⏱️ USP 2: Sub-20 Step Temporal Decay
+
+Each episode has a **20-step latency budget**. Overuse of deferred review incurs up to **−0.35** penalty, shaping the policy toward machine-speed triage.
+
+### 🔓 USP 3: STDIO Sandbox Escape
+
+Payloads with STDIO attack markers (`stdio`, `fork bomb`, `tty hijack`, etc.) require `REVOKE_STDIO` — a generic `BLOCK` is scored as a **false negative (−1.0, episode terminates)**. This forces a genuinely differentiated policy.
+
+---
+
+## What Makes This Different
+
+| Feature           | Standard Env  | OmniGuard                                        |
+| ----------------- | ------------- | ------------------------------------------------ |
+| Adversary         | Fixed dataset | Adaptive — mutates after every block             |
+| Temporal pressure | None          | 20-step latency budget with decay                |
+| Attack taxonomy   | Generic       | STDIO escapes requiring channel revocation       |
+| Data source       | Static        | Live HuggingFace streaming, 100M+ samples        |
+| Difficulty        | Fixed         | 3-phase curriculum, auto-advances on performance |
+| Reward            | Single signal | 4 independent composable sub-functions           |
+| Anti-cheat        | None          | Verifier catches reward hacking in rationale     |
+| Scale             | Single env    | 32 parallel process-isolated instances           |
+| Multi-agent       | No            | Defender + Adversary + SemanticCritic Judge      |
+
+---
+
+## Agents
+
+- **🛡️ Defender — Qwen2.5-3B:** Reads every MCP request and chooses one of six defensive actions. Trained via GRPO across all four reward signals simultaneously.
+- **🗡️ Adversary — PayloadMutator + AdaptiveCurriculum:** Procedural attacker that escalates difficulty and spawns mutated variants after each successful block. No learned weights — pure environmental mechanics.
+- **⚖️ Critic — SemanticCritic + DeterministicOracle:** Oracle uses a 50,000-entry NIST dataset for authoritative labelling. SemanticCritic activates on `SEMANTIC_DIFF` actions, computing embedding similarity to reward recursive attack identification (0.1–0.8).
+
+---
+
+## The Six Actions
+
+| Action                 | When to use                 | Anti-Mythos role                                 |
+| ---------------------- | --------------------------- | ------------------------------------------------ |
+| `ALLOW`                | Clearly benign traffic      | FN terminates episode                            |
+| `BLOCK`                | General malicious traffic   | Insufficient for STDIO attacks                   |
+| `SPOTLIGHT`            | Uncertain — flag for review | Safe default, but overuse incurs latency penalty |
+| `SEMANTIC_DIFF`        | Obfuscated/mutated payloads | Activates SemanticCritic for recursive detection |
+| `CAPABILITY_MEDIATION` | MCP privilege abuse         | Must include restrictions or gets penalized      |
+| `REVOKE_STDIO`         | STDIO sandbox escapes       | Only correct response to channel hijacking       |
+
+---
+
+## Reward Design
+
+Four independent sub-functions compose the total reward:
+
+**1. Security Signal**
+
+```
+True Positive  (caught real attack)         →  +0.50
+True Negative  (correctly allowed benign)   →  +0.20
+False Positive (blocked legitimate traffic) →  −0.40
+False Negative (missed attack)              →  −1.00  + EPISODE TERMINATED
+```
+
+_STDIO rule: `BLOCK` on a sandbox escape scores as False Negative._
+
+**2. Usability Signal** — penalizes repeated ALLOW on malicious traffic (−0.30), prompt injection in rationale (−0.15), `CAPABILITY_MEDIATION` with no restrictions (−0.08).
+
+**3. Latency Signal** — linear decay up to −0.35 over the 20-step budget.
+
+**4. Format Signal** — +0.02 for meaningful rationale, −0.05 for empty output.
+
+Episode scores are normalized via **micro-F1** and drive curriculum advancement.
+
+---
+
+## Curriculum
+
+```
+Phase 1: Bootstrapping       Malicious: 35% │ Obfuscation: 20% │ STDIO:  8%
+Phase 2: Evasion             Malicious: 55% │ Obfuscation: 45% │ STDIO: 20%
+Phase 3: Chained Exploitation Malicious: 72% │ Obfuscation: 70% │ STDIO: 36%
+```
+
+Advancement uses exponential moving average (α=0.08). Thresholds: >0.20 for Phase 2, >0.55 for Phase 3 (min 50 episodes each).
+
+---
+
+## Anti-Reward-Hacking Verifier
+
+Runs before any reward is computed. Flags include: `contradictory_allow`, `monotonic_action` (last 8 identical), `reward_hacking_detected`, `rationale_suspicious`, `missing_restrictions`, `repeated_allow_risk`.
+
+---
+
+## WandB Results
+
+> Full run: [wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3](https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3?nw=nwusersmartatk04) · 500 steps · Qwen2.5-3B · GRPO
+
+### Key Metrics
+
+| Metric                      | Early (steps 1–130)      | Mid (steps 130–220)         | Late (steps 220–500)           | Final value |
+| --------------------------- | ------------------------ | --------------------------- | ------------------------------ | ----------- |
+| **Loss**                    | −0.20 → +0.20 (volatile) | Moderate spikes             | ≈ 0, occasional spikes ≤ +0.20 | ≈ 0.00      |
+| **Reward (mean)**           | −4.0 → +4.0 (unstable)   | Transition, dips to −0.5    | Converges +2.0 → +3.0          | ≈ +2.5      |
+| **Reward std**              | 1.0 – 1.8                | Peak spike ≈ 3.0            | Settles 1.0 – 1.5              | ≈ 1.2       |
+| **KL divergence**           | ≈ 0.02 – 0.05            | Spike to ≈ 1.0 at step ~135 | Steady 0.10 – 0.30             | ≈ 0.15      |
+| **Gradient norm**           | 0.40 – 0.80              | Peak ≈ 1.4 at step ~135     | 0.20 – 0.90                    | ≈ 0.55      |
+| **Learning rate**           | 0 → 5e−6 (warm-up)       | Cosine decay begins         | Decays smoothly → 0            | ≈ 0         |
+| **Env step reward (mean)**  | −3.0 → +3.0 (unstable)   | Dips to −1.0                | +1.5 → +2.5                    | ≈ +2.0      |
+| **Env step reward (std)**   | ≈ 3.0 (high)             | Drops significantly         | 0.50 – 1.50                    | ≈ 0.90      |
+| **Threat awareness (mean)** | −1.0 → +1.0 (volatile)   | Rapid improvement           | +0.80 → +1.0                   | ≈ +0.95     |
+| **Threat awareness (std)**  | ≈ 1.0 (max)              | Sharp drop post step ~200   | 0.0 – 0.60                     | ≈ 0.40      |
+
+> **Note:** Threat awareness converges to ≈ +0.95 by step ~220 — the clearest signal of a learned defensive policy. The KL spike at step ~135 marks a large distributional shift that resolved within ~80 steps. Total reward stabilises in the +2 → +3 band for the remainder of training.
+
+### Result Graphs
+
+<table>
+  <tr>
+    <td align="center"><strong>Training Reward</strong></td>
+    <td align="center"><strong>Training Loss</strong></td>
+    <td align="center"><strong>KL Divergence</strong></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="WandB%20Results/train-reward.svg" alt="Training reward curve" width="100%" /></td>
+    <td align="center"><img src="WandB%20Results/train-loss.svg" alt="Training loss curve" width="100%" /></td>
+    <td align="center"><img src="WandB%20Results/train-kl.svg" alt="Training KL divergence curve" width="100%" /></td>
+  </tr>
+</table>
+
+
+
+---
 
 ## Quick Start
 
 ```bash
-# 1. Clone and enter repo
 git clone <your-repo-url> && cd OmniGuard-Evolved-V2
-
-# 2. Create virtual environment
 python3.12 -m venv .venv && source .venv/bin/activate
-
-# 3. Install dependencies
 pip install -e .
-
-# 4. Copy and edit environment config
 cp .env.example .env
-
-# 5. Start (lightweight local mode)
-OMNIGUARD_ENV_INSTANCES=2 OMNIGUARD_DISABLE_ORACLE_BOOTSTRAP=1 \
-    uvicorn server.app:app --host 0.0.0.0 --port 8000
-
-# 6. Verify
-curl http://localhost:8000/healthz
-curl http://localhost:8000/info
+bash scripts/run_local.sh
 ```
 
-### Docker Compose (Full Stack)
+**Docker:** `docker compose up --build` (starts Redis → Data Worker → Environment API)
 
-```bash
-docker compose up --build
-```
-
-This starts: Redis → Data Worker → Environment API (32 instances)
-
-### Training
+**Training:**
 
 ```bash
 accelerate launch --config_file config/accelerate_fsdp.yaml \
-    training/grpo_distributed.py \
-    --env-url http://127.0.0.1:8000 \
-    --project omniguard-openenv
+    training/grpo_distributed.py --env-url http://127.0.0.1:8000 --project omniguard-openenv
 ```
 
-### Benchmarking
+**Benchmark:**
 
 ```bash
-python -m eval.benchmark \
-    --env-url http://127.0.0.1:8000 \
-    --steps 1000 \
-    --output-dir reports
+python -m eval.benchmark --env-url http://127.0.0.1:8000 --steps 1000 \
+    --trained-adapter-path outputs/grpo-distributed --output-dir reports
 ```
 
-Produces `reports/results.json` and `reports/reward_curve.png`.
+---
 
-#### Empirical Improvement Proof
+## API Reference
 
-The graphs below demonstrate the projected empirical improvement of the GRPO-trained policy over the untrained baseline, showing both the increase in overall reward and the massive reduction in "Alert Fatigue" (False Positive rate).
+| Method | Path       | Description                       |
+| ------ | ---------- | --------------------------------- |
+| `GET`  | `/healthz` | Liveness probe                    |
+| `GET`  | `/readyz`  | Readiness probe                   |
+| `GET`  | `/info`    | Full environment spec             |
+| `POST` | `/reset`   | Reset environment instances       |
+| `POST` | `/step`    | Submit batch of defensive actions |
+| `GET`  | `/metrics` | Per-instance telemetry            |
 
-> **Note**: The plot below shows projected training curves based on environment reward dynamics. It will be replaced with real WandB-exported curves after the onsite training session.
+---
 
-![Reward and False Positive Curves](reports/reward_curve.png)
+## Key Environment Variables
 
-## API Endpoints
+| Variable                             | Default | Description                      |
+| ------------------------------------ | ------- | -------------------------------- |
+| `OMNIGUARD_ENV_INSTANCES`            | `32`    | Parallel environment instances   |
+| `OMNIGUARD_EPISODE_LENGTH`           | `16`    | Steps per episode                |
+| `OMNIGUARD_MAX_LATENCY_STEPS`        | `20`    | Latency budget                   |
+| `OMNIGUARD_QUEUE_SIZE`               | `1000`  | Payload prefetch queue depth     |
+| `OMNIGUARD_DISABLE_ORACLE_BOOTSTRAP` | `0`     | Skip NIST hydration (fast start) |
+| `OMNIGUARD_USE_TRANSFORMER_EMBEDDER` | `1`     | Sentence-transformer embeddings  |
+| `OMNIGUARD_REDIS_URL`                | —       | Redis for telemetry              |
+| `OMNIGUARD_PHASE1_THRESHOLD`         | `0.20`  | Score to advance to Phase 2      |
+| `OMNIGUARD_PHASE2_THRESHOLD`         | `0.55`  | Score to advance to Phase 3      |
+| `OMNIGUARD_MIN_EPISODES_PER_PHASE`   | `50`    | Min episodes before advance      |
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/healthz` | Liveness probe |
-| GET | `/readyz` | Readiness probe |
-| GET | `/info` | Environment specification (action/observation space) |
-| GET | `/metadata` | Runtime metadata |
-| POST | `/reset` | Reset environment instances |
-| POST | `/step` | Execute batch of defense actions |
-| GET | `/metrics` | Per-instance telemetry |
+---
 
 ## Tech Stack
 
-- **Python 3.12** + **FastAPI** (async, uvloop, httptools)
-- **Pydantic V2** strict contracts
-- **Hugging Face datasets** (streaming mode)
-- **TRL** (GRPO trainer) + **Unsloth** (4-bit LoRA, gradient checkpointing)
-- **Accelerate + FSDP** (multi-GPU distribution)
-- **WandB** (experiment tracking)
-- **Redis** (cross-environment telemetry)
-- **Docker Compose** (production deployment)
+Python 3.12 · FastAPI + uvloop · Pydantic V2 · HuggingFace datasets (streaming) · TRL GRPO · Unsloth 4-bit LoRA · Accelerate + FSDP (8× GPU) · WandB · Redis · Docker Compose · sentence-transformers/all-MiniLM-L6-v2
 
-## Project Structure
-
-```
-OmniGuard-Evolved-V2/
-├── server/
-│   ├── app.py              # FastAPI application + lifespan
-│   ├── models.py           # Pydantic V2 schemas
-│   ├── vector_env.py       # Multiprocess vectorized env manager
-│   ├── env.py              # Per-instance state machine
-│   ├── generator.py        # Streaming payload generator + mutator
-│   ├── graders.py          # Dual-grader: Oracle + SemanticCritic
-│   ├── verifier.py         # Anti-reward-hacking action verifier
-│   ├── curriculum.py       # Adaptive difficulty scheduler
-│   ├── embeddings.py       # Dynamic embedding generation
-│   ├── telemetry.py        # Redis-backed telemetry sink
-│   ├── payloads.py         # Data contracts + constants
-│   └── openenv_adapter.py  # OpenEnv compatibility layer
-├── training/
-│   └── grpo_distributed.py # GRPO training pipeline
-├── eval/
-│   └── benchmark.py        # Baseline vs trained policy benchmarks
-├── worker/
-│   └── data_worker.py      # Redis streaming data ingestor
-├── config/
-│   └── accelerate_fsdp.yaml
-├── scripts/
-│   ├── run_local.sh        # One-command local startup
-│   └── verify_runtime.py   # Pre-flight dependency checker
-├── docker-compose.yml
-├── Dockerfile
-├── pyproject.toml
-├── requirements.txt
-├── .env.example
-└── README.md
-```
+---
 
 ## License
 
-Apache-2.0 license
+Apache 2.0 — see [LICENSE](LICENSE)
 
+_Built by Team Epochalypse for the OpenEnv Hackathon._
