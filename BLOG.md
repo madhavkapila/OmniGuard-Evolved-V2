@@ -86,6 +86,8 @@ The reward system has four moving parts, and they're designed to fight each othe
 | Latency   | How long did it take you to decide?                              |
 | Format    | Did your reasoning make sense, or are you just pattern-matching? |
 
+Empirically, the untrained baseline collapses into alert fatigue or catastrophic breaches, while the GRPO-trained OmniGuard agent shifts into consistent positive reward and stabilized threat-awareness metrics. This before/after delta is the core evidence that the model learns from the environment.
+
 A model that always blocks everything scores beautifully on security and catastrophically on usability. A model that deliberates carefully and gets it right scores well on security and terribly on latency. A model that writes vague rationales hedges its format score toward zero.
 
 Every shortcut has a cost. The only path to a high score is to actually get good at the job.

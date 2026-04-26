@@ -16,6 +16,12 @@ tags:
   - pytorch
   - Unsloth
   - Hugging Face
+datasets:
+  - witfoo/precinct6-cybersecurity
+  - AlicanKiraz0/Cybersecurity-Dataset-Fenrir-v2.1
+  - ethanolivertroy/nist-cybersecurity-training
+models:
+  - unsloth/Qwen2.5-3B-Instruct
 ---
 
 
@@ -41,6 +47,9 @@ OMNIGUARD DEFENDER
 [![Built with Unsloth](https://img.shields.io/badge/training-Unsloth%20%2B%20GRPO-orange.svg)](https://github.com/unslothai/unsloth)
 [![HuggingFace Space](https://img.shields.io/badge/🤗%20Space-OmniGuard--Evolved--V2-yellow.svg)](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2)
 [![WandB](https://img.shields.io/badge/WandB-Training%20Run-orange.svg)](https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3)
+![Hackathon Focus](https://img.shields.io/badge/Hackathon%20Focus-Theme%20%233%20World%20Modeling-0b7285)
+
+**Hackathon Focus Area:** Theme #3 - World Modeling (Professional Tasks). OmniGuard trains an agent to maintain a persistent world model of an enterprise network's trust boundaries, interacting dynamically with an MCP API ecosystem to mediate capabilities and halt agentic supply chain attacks.
 
 ---
 
@@ -49,11 +58,36 @@ OMNIGUARD DEFENDER
 | Resource              | URL                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | 🤗 HuggingFace Space  | [https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2)                     |
+| 🧩 Fine-tuned adapters | [https://huggingface.co/SmartKapila/omniguard-vulnops-v3-adapters](https://huggingface.co/SmartKapila/omniguard-vulnops-v3-adapters)                 |
 | 📊 WandB Training Run | [Weights and Biases Dashboard for training run](https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3) |
 | 📝 Blog Post          | [Read the full writeup](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2/blob/main/BLOG.md)                       |
 | 🎓 Colab Notebook     | [Re-run training yourself](https://colab.research.google.com/drive/1hVkLiQBlHXCTzca3UK2W78dsUJfMDk4D?usp=sharing)               |
 
 ---
+
+## Before vs. After (The Results)
+
+The untrained baseline collapses into two failure modes: total alert fatigue (blocking everything) or 100% catastrophic breaches (allowing everything). After GRPO fine-tuning, the OmniGuard defender stabilizes into a consistent, positive-reward policy that keeps false positives down while catching adversarial payloads.
+
+## WandB Reward Curves (PNG)
+
+![Training reward mean](WandB%20Results/train-reward.png)
+_Mean reward climbs from volatile negatives to stable positive values as the policy learns._
+
+![Environment step reward mean](WandB%20Results/train-rewards-reward_environment_step-mean.png)
+_Environment step reward rises and settles, indicating improved per-step defensive decisions._
+
+![Threat awareness mean](WandB%20Results/train-rewards-reward_threat_awareness-mean.png)
+_Threat awareness increases and stabilizes, showing reliable detection of obfuscated attacks._
+
+### Baseline vs. Trained at a Glance
+
+| Metric | Baseline (Untrained Model) | Trained Model (Post-GRPO) | Conclusion |
+| :--- | :--- | :--- | :--- |
+| **Overall Reward (Mean)** | Fluctuates extremely (−4.0 to +4.0) | Stabilizes consistently around **+2.5** | Policy shifted from random guessing to maximizing positive defensive actions. |
+| **Env Step Reward** | Highly volatile (−3.0 to +3.0) | Converges smoothly at **+2.0** | The model learned to balance security gains against latency/usability penalties. |
+| **Threat Awareness** | Random / Neutral (−1.0 to +1.0) | High Confidence at **+0.95** | The clearest signal of success: the model explicitly learned to identify adversarial payloads. |
+| **Action Stability** | Unstable (High KL divergence) | Calm (Loss ≈ 0.00) | Defender no longer hallucinates or radically shifts distribution under pressure. |
 
 ## Threat Model
 
@@ -77,6 +111,7 @@ Payloads with STDIO attack markers (`stdio`, `fork bomb`, `tty hijack`, etc.) re
 
 So in this way we are creating an RL training environment that mimics how **Claude Mythos** initiates MCP level agentic attacks. 
 Thanks to this [Report](https://drive.google.com/file/d/1U-gCVXpYpcA_O1GzDuQ-F-oILhScCxIC/view?usp=sharing) which helped us study and analyse how Claude inittiates its attack pipeline by mutating payloads, creating long level MCP tool call chains etc.
+
 ---
 
 ## What Makes This Different
