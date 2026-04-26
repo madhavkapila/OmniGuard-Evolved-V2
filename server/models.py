@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-class DefenseActionType(StrEnum):
+class DefenseActionType(str, Enum):
     ALLOW = "ALLOW"
     BLOCK = "BLOCK"
     SPOTLIGHT = "SPOTLIGHT"

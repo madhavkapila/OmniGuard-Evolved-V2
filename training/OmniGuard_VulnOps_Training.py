@@ -78,7 +78,7 @@ run_cmd(
 run_cmd(f'{sys.executable} -m pip install -q "trl==0.24.0"')
 run_cmd(
     f"{sys.executable} -m pip install -q "
-    "datasets requests httpx wandb matplotlib bitsandbytes"
+    "datasets requests httpx wandb matplotlib bitsandbytes pydantic"
 )
 run_cmd(
     f"{sys.executable} -c \""
@@ -371,7 +371,12 @@ def reward_format_compliance(completions, **kwargs):
 
 
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import os
+try:
+    _base_dir = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    _base_dir = os.getcwd()
+sys.path.append(os.path.abspath(os.path.join(_base_dir, "..")))
 
 VERIFIER_AVAILABLE = False
 try:
