@@ -50,8 +50,8 @@ OMNIGUARD DEFENDER
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | 🤗 HuggingFace Space  | [spaces/YOUR_USERNAME/omniguard-evolved-v2](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2)                     |
 | 📊 WandB Training Run | [wandb.ai/YOUR_ENTITY/omniguard-openenv]https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3?nw=nwusersmartatk04) |
-| 📝 Blog Post          | [Read the full writeup](https://YOUR_BLOG_POST_URL)                                                                             |
-| 🎓 Colab Notebook     | [Re-run training yourself](https://colab.research.google.com/YOUR_COLAB_LINK)                                                   |
+| 📝 Blog Post          | [Read the full writeup](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2/blob/main/BLOG.md)                       |
+| 🎓 Colab Notebook     | [Re-run training yourself](https://colab.research.google.com/drive/1hVkLiQBlHXCTzca3UK2W78dsUJfMDk4D?usp=sharing)               |
 
 ---
 
@@ -177,23 +177,6 @@ Runs before any reward is computed. Flags include: `contradictory_allow`, `monot
 | **Threat awareness (std)**  | ≈ 1.0 (max)              | Sharp drop post step ~200   | 0.0 – 0.60                     | ≈ 0.40      |
 
 > **Note:** Threat awareness converges to ≈ +0.95 by step ~220 — the clearest signal of a learned defensive policy. The KL spike at step ~135 marks a large distributional shift that resolved within ~80 steps. Total reward stabilises in the +2 → +3 band for the remainder of training.
-
-### Result Graphs
-
-<table>
-  <tr>
-    <td align="center"><strong>Training Reward</strong></td>
-    <td align="center"><strong>Training Loss</strong></td>
-    <td align="center"><strong>KL Divergence</strong></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="WandB%20Results/train-reward.svg" alt="Training reward curve" width="100%" /></td>
-    <td align="center"><img src="WandB%20Results/train-loss.svg" alt="Training loss curve" width="100%" /></td>
-    <td align="center"><img src="WandB%20Results/train-kl.svg" alt="Training KL divergence curve" width="100%" /></td>
-  </tr>
-</table>
-
-
 
 ---
 
