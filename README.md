@@ -39,8 +39,8 @@ OMNIGUARD DEFENDER
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 [![Built with Unsloth](https://img.shields.io/badge/training-Unsloth%20%2B%20GRPO-orange.svg)](https://github.com/unslothai/unsloth)
-[![HuggingFace Space](https://img.shields.io/badge/🤗%20Space-OmniGuard--Evolved--V2-yellow.svg)](https://huggingface.co/spaces/YOUR_USERNAME/omniguard-evolved-v2)
-[![WandB](https://img.shields.io/badge/WandB-Training%20Run-orange.svg)](https://wandb.ai/YOUR_WANDB_ENTITY/omniguard-openenv)
+[![HuggingFace Space](https://img.shields.io/badge/🤗%20Space-OmniGuard--Evolved--V2-yellow.svg)](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2)
+[![WandB](https://img.shields.io/badge/WandB-Training%20Run-orange.svg)](https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3)
 
 ---
 
@@ -48,8 +48,8 @@ OMNIGUARD DEFENDER
 
 | Resource              | URL                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 🤗 HuggingFace Space  | [spaces/YOUR_USERNAME/omniguard-evolved-v2](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2)                     |
-| 📊 WandB Training Run | [wandb.ai/YOUR_ENTITY/omniguard-openenv]https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3?nw=nwusersmartatk04) |
+| 🤗 HuggingFace Space  | [https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2)                     |
+| 📊 WandB Training Run | [Weights and Biases Dashboard for training run](https://wandb.ai/smartatk04-thapar-university/omniguard-vulnops-v3) |
 | 📝 Blog Post          | [Read the full writeup](https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2/blob/main/BLOG.md)                       |
 | 🎓 Colab Notebook     | [Re-run training yourself](https://colab.research.google.com/drive/1hVkLiQBlHXCTzca3UK2W78dsUJfMDk4D?usp=sharing)               |
 
@@ -75,6 +75,8 @@ Each episode has a **20-step latency budget**. Overuse of deferred review incurs
 
 Payloads with STDIO attack markers (`stdio`, `fork bomb`, `tty hijack`, etc.) require `REVOKE_STDIO` — a generic `BLOCK` is scored as a **false negative (−1.0, episode terminates)**. This forces a genuinely differentiated policy.
 
+So in this way we are creating an RL training environment that mimics how **Claude Mythos** initiates MCP level agentic attacks. 
+Thanks to this [Report](https://drive.google.com/file/d/1U-gCVXpYpcA_O1GzDuQ-F-oILhScCxIC/view?usp=sharing) which helped us study and analyse how Claude inittiates its attack pipeline by mutating payloads, creating long level MCP tool call chains etc.
 ---
 
 ## What Makes This Different

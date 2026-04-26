@@ -14,6 +14,9 @@ By the time a human analyst notices, the chain has already completed.
 
 We call this class of threat **Claude Mythos**. And instead of waiting for it to arrive, we built it ourselves.
 
+So here we are creating an RL training environment that mimics how **Claude Mythos** initiates MCP level agentic attacks.
+Thanks to this [Report](https://drive.google.com/file/d/1U-gCVXpYpcA_O1GzDuQ-F-oILhScCxIC/view?usp=sharing) which helped us study and analyse how Claude inittiates its attack pipeline by mutating payloads, creating long level MCP tool call chains etc.
+
 ---
 
 ## The monster we made
