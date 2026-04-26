@@ -4,7 +4,7 @@ emoji: 🛡️
 colorFrom: blue
 colorTo: indigo
 sdk: docker
-app_port: 8000
+app_port: 7860
 pinned: false
 short_description: OpenEnv RL environment for training MCP gateway defenders.
 tags:
