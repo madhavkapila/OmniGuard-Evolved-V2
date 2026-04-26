@@ -38,6 +38,9 @@ def run_cmd(cmd: str) -> None:
     if result.returncode != 0:
         print(f"WARNING: exit code {result.returncode}")
 
+# Pull latest codebase changes from HF Hub or GitHub
+run_cmd("git pull")
+
 # Clean up stale cache to prevent Unsloth CUDA errors
 for _c in [
     pathlib.Path("/data/unsloth_compiled_cache"),
