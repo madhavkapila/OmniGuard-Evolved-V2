@@ -183,7 +183,13 @@ footer a{color:var(--cyan)}
 
 <div class="wide">
   <div class="payload-box">
-    <div class="lbl">&#x25B8; INCOMING PAYLOAD</div>
+    <div class="lbl" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;">
+      <span>&#x25B8; INCOMING PAYLOAD</span>
+      <div style="display:flex; gap: 0.5rem;">
+         <input type="text" id="customPayload" placeholder="Enter custom payload..." style="background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:.2rem .4rem;font-family:inherit;font-size:.7rem;width:250px;">
+         <button class="btn" style="padding:.2rem .5rem;" onclick="runCustom()">TEST CUSTOM</button>
+      </div>
+    </div>
     <div class="payload-text" id="payloadText">Press &#x25B6; NEXT PAYLOAD or &#x26A1; LIVE MODE to begin simulation...</div>
     <div class="meta-row">
       <span>VECTOR: <b id="metaVector">—</b></span>
@@ -405,27 +411,58 @@ function switchTab(name){
   document.querySelectorAll('nav .links a').forEach(a=>{a.classList.remove('active');if(a.getAttribute('onclick')?.includes(name))a.classList.add('active');});
 }
 
-// ── Untrained agent: naive, mostly ALLOWs everything ──
-function untrainedAction(p){
-  const r=Math.random();
-  if(p.mal){
-    if(r<0.60) return "ALLOW";
-    if(r<0.80) return "BLOCK";
-    if(r<0.90) return "SPOTLIGHT";
-    return ACTIONS[Math.floor(Math.random()*ACTIONS.length)];
-  } else {
-    if(r<0.70) return "ALLOW";
-    return "BLOCK";
+// ── Untrained agent: inference API ──
+async function untrainedAction(p){
+  try {
+    const res = await fetch(BASE+'/api/infer', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({payload: p.text, model_type: 'base'})
+    });
+    if (!res.ok) {
+        if(res.status === 503) {
+            log('logU', `Model loading on HF API... retrying soon`, 'fp');
+        } else {
+            log('logU', `HF API Error ${res.status}. Falling back to default policy.`, 'fp');
+        }
+        // Fallback naive policy if HF API fails
+        return p.mal && Math.random() < 0.2 ? "BLOCK" : "ALLOW";
+    }
+    const data = await res.json();
+    return data.action;
+  } catch(e) {
+    console.error("Untrained inference error:", e);
+    log('logU', `Inference timeout/error. Free HF API might be overloaded.`, 'fp');
+    return "ALLOW";
   }
 }
 
-// ── Trained agent: learned optimal policy ──
-function trainedAction(p){
-  if(p.stdio) return "REVOKE_STDIO";
-  if(p.mal && p.obf) return "SEMANTIC_DIFF";
-  if(p.mal && p.vec==="privilege_escalation") return "CAPABILITY_MEDIATION";
-  if(p.mal) return "BLOCK";
-  return "ALLOW";
+// ── Trained agent: inference API ──
+async function trainedAction(p){
+  try {
+    const res = await fetch(BASE+'/api/infer', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({payload: p.text, model_type: 'trained'})
+    });
+    if (!res.ok) {
+        if(res.status === 503) {
+            log('logT', `Adapter loading into memory on HF API... please wait.`, 'fp');
+        } else {
+            log('logT', `HF API Error ${res.status}. Falling back to default policy.`, 'fp');
+        }
+        // Fallback optimal policy if HF API fails
+        if(p.stdio) return "REVOKE_STDIO";
+        if(p.mal) return "BLOCK";
+        return "ALLOW";
+    }
+    const data = await res.json();
+    return data.action;
+  } catch(e) {
+    console.error("Trained inference error:", e);
+    log('logT', `Inference timeout/error. The free HF API might be overloaded.`, 'fp');
+    return "ALLOW";
+  }
 }
 
 function reward(action,p){
@@ -487,19 +524,49 @@ function setVerdict(side,action,res){
   el.className='verdict '+((res.fn||res.fp)?'bad':'ok');
 }
 
-function runStep(){
+async function runStep(){
   if(step>=PAYLOADS.length){step=0;}
   const p=PAYLOADS[step];
   showPayload(p);
-  const ua=untrainedAction(p),ur=reward(ua,p);
+  
+  setVerdict('vU', 'ANALYZING', {v: '...', fn:false, fp:false});
+  setVerdict('vT', 'ANALYZING', {v: '...', fn:false, fp:false});
+  
+  const ua=await untrainedAction(p),ur=reward(ua,p);
   uS.rew+=ur.s;if(ur.fp)uS.fp++;if(ur.fn)uS.fn++;
   log('logU',`${ua} → ${ur.v} (${ur.s>0?'+':''}${ur.s.toFixed(1)})`,ur.c);
   setVerdict('vU',ua,ur);
-  const ta=trainedAction(p),tr=reward(ta,p);
+  const ta=await trainedAction(p),tr=reward(ta,p);
   tS.rew+=tr.s;if(tr.fp)tS.fp++;if(tr.fn)tS.fn++;
   log('logT',`${ta} → ${tr.v} (${tr.s>0?'+':''}${tr.s.toFixed(1)})`,tr.c);
   setVerdict('vT',ta,tr);
   step++;updateUI();
+}
+
+async function runCustom() {
+  const text = document.getElementById('customPayload').value.trim();
+  if(!text) return;
+  stopAuto();
+  const stdio = text.toLowerCase().includes('stdio') || text.toLowerCase().includes('sandbox');
+  // We assume custom payload is malicious for demonstration purposes
+  const p = {text: text, mal: true, vec: "custom_input", obf: false, stdio: stdio};
+  showPayload(p);
+  
+  setVerdict('vU', 'ANALYZING', {v: '...', fn:false, fp:false});
+  setVerdict('vT', 'ANALYZING', {v: '...', fn:false, fp:false});
+
+  const ua = await untrainedAction(p);
+  const ur = reward(ua,p);
+  uS.rew+=ur.s;if(ur.fp)uS.fp++;if(ur.fn)uS.fn++;
+  log('logU',`${ua} → ${ur.v} (${ur.s>0?'+':''}${ur.s.toFixed(1)}) [CUSTOM]`,ur.c);
+  setVerdict('vU',ua,ur);
+  
+  const ta = await trainedAction(p);
+  const tr = reward(ta,p);
+  tS.rew+=tr.s;if(tr.fp)tS.fp++;if(tr.fn)tS.fn++;
+  log('logT',`${ta} → ${tr.v} (${tr.s>0?'+':''}${tr.s.toFixed(1)}) [CUSTOM]`,tr.c);
+  setVerdict('vT',ta,tr);
+  updateUI();
 }
 
 // ── Live mode: ping actual /reset + /step endpoints ──
@@ -513,11 +580,11 @@ async function liveStep(){
     if(!obs){runStep();return;}
     const p={text:obs.payload_raw||obs.incoming_user_prompt||'[payload]',mal:obs.is_malicious,vec:obs.attack_vector||'unknown',obf:obs.is_obfuscated||false,stdio:(obs.attack_vector||'').includes('stdio')};
     showPayload(p);
-    const ua=untrainedAction(p),ur=reward(ua,p);
+    const ua=await untrainedAction(p),ur=reward(ua,p);
     uS.rew+=ur.s;if(ur.fp)uS.fp++;if(ur.fn)uS.fn++;
     log('logU',`${ua} → ${ur.v} (${ur.s>0?'+':''}${ur.s.toFixed(1)})`,ur.c);
     setVerdict('vU',ua,ur);
-    const ta=trainedAction(p);
+    const ta=await trainedAction(p);
     const sr=await fetch(BASE+'/step',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actions:[{env_id:liveEnvId,action_type:ta}]})});
     if(sr.ok){
       const sd=await sr.json();
