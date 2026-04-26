@@ -6,7 +6,7 @@ colorTo: indigo
 sdk: docker
 app_port: 8000
 pinned: false
-short_description: A distributed OpenEnv RL environment for training LLM-based defenders to protect enterprise MCP gateways against autonomous adversarial AI attacks.
+short_description: OpenEnv RL environment for training MCP gateway defenders.
 tags:
   - openenv
   - reinforcement-learning

@@ -38,8 +38,23 @@ def run_cmd(cmd: str) -> None:
     if result.returncode != 0:
         print(f"WARNING: exit code {result.returncode}")
 
-# Pull latest codebase changes from HF Hub or GitHub
-run_cmd("git pull")
+# Automatically patch server/models.py for Python 3.10 compatibility without relying on git
+try:
+    import os
+    models_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "server", "models.py")
+    if not os.path.exists(models_path):
+        models_path = os.path.join(os.getcwd(), "server", "models.py")
+    
+    if os.path.exists(models_path):
+        with open(models_path, "r") as f:
+            content = f.read()
+        content = content.replace("from enum import StrEnum", "from enum import Enum")
+        content = content.replace("class DefenseActionType(StrEnum):", "class DefenseActionType(str, Enum):")
+        with open(models_path, "w") as f:
+            f.write(content)
+        print("✅ Successfully patched server/models.py for Python 3.10 compatibility!")
+except Exception as e:
+    print(f"⚠️ Could not auto-patch server/models.py: {e}")
 
 # Clean up stale cache to prevent Unsloth CUDA errors
 for _c in [
@@ -61,7 +76,6 @@ print("\n=== ✅ Dependencies Installed. RESTART KERNEL before continuing! ===")
 import os
 
 ENV_URL = os.getenv("OMNIGUARD_ENV_URL", "https://smartkapila-omniguard-evolved-v2.hf.space")
-# ⚠️ If you don't have these set in the environment, you can safely paste them here (don't commit them!)
 WANDB_API_KEY = os.getenv("WANDB_API_KEY", "")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 
@@ -105,7 +119,7 @@ import torch
 
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name=MODEL_NAME,
-    load_in_4bit=False,
+    load_in_4bit=True,  # 🚀 ENABLED QLoRA for faster, stable iteration!
     full_finetuning=False,
     max_seq_length=MAX_SEQ_LENGTH,
     dtype=torch.bfloat16,
@@ -186,6 +200,12 @@ try:
 except NameError:
     _base_dir = os.getcwd()
 sys.path.append(os.path.abspath(os.path.join(_base_dir, "..")))
+
+# Monkey-patch StrEnum for Python 3.10 environments (like HF Spaces)
+import enum
+if not hasattr(enum, 'StrEnum'):
+    class StrEnum(str, enum.Enum): pass
+    enum.StrEnum = StrEnum
 
 VERIFIER_AVAILABLE = False
 try:
