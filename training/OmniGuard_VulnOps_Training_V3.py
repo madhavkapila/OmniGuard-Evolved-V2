@@ -41,9 +41,10 @@ def run_cmd(cmd: str) -> None:
 # Automatically patch server/models.py for Python 3.10 compatibility without relying on git
 try:
     import os
-    models_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "server", "models.py")
+    # Notebook is usually run from the project root or training/ directory
+    models_path = os.path.join(os.getcwd(), "server", "models.py")
     if not os.path.exists(models_path):
-        models_path = os.path.join(os.getcwd(), "server", "models.py")
+        models_path = os.path.join(os.getcwd(), "..", "server", "models.py")
     
     if os.path.exists(models_path):
         with open(models_path, "r") as f:
