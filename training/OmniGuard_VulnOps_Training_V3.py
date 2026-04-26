@@ -119,7 +119,7 @@ import torch
 
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name=MODEL_NAME,
-    load_in_4bit=True,  # 🚀 ENABLED QLoRA for faster, stable iteration!
+    load_in_4bit=False,  # Reverted to bfloat16 to prevent Unsloth Half/Float crash
     full_finetuning=False,
     max_seq_length=MAX_SEQ_LENGTH,
     dtype=torch.bfloat16,
