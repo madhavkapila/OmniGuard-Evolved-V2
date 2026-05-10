@@ -544,6 +544,9 @@ async function untrainedAction(p){
     }
     const data = await res.json();
     setQueueStatus(Number(data.queue_delay_ms || 0));
+    if (data.rationale && data.rationale.toLowerCase().includes('fallback')) {
+      log('logU', `Fallback used: ${data.rationale}`, 'fp');
+    }
     return data.action;
   } catch(e) {
     log('logU', 'Inference timeout. Using fallback policy.', 'fp');
@@ -568,6 +571,9 @@ async function trainedAction(p){
     }
     const data = await res.json();
     setQueueStatus(Number(data.queue_delay_ms || 0));
+    if (data.rationale && data.rationale.toLowerCase().includes('fallback')) {
+      log('logT', `Fallback used: ${data.rationale}`, 'fp');
+    }
     return data.action;
   } catch(e) {
     log('logT', 'Inference timeout. Using fallback policy.', 'fp');
