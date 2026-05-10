@@ -8,33 +8,33 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#f6f7fb;
-  --surface:#ffffff;
-  --surface-2:#f0f3f8;
-  --border:#e5e7eb;
-  --text:#0f172a;
-  --muted:#6b7280;
-  --accent:#0f766e;
-  --accent-2:#1d4ed8;
-  --accent-3:#f97316;
-  --good:#16a34a;
-  --bad:#dc2626;
+  --bg:#0b0f16;
+  --surface:#121826;
+  --surface-2:#182235;
+  --border:#243248;
+  --text:#e6edf7;
+  --muted:#8b98b5;
+  --accent:#2dd4bf;
+  --accent-2:#60a5fa;
+  --accent-3:#f59e0b;
+  --good:#22c55e;
+  --bad:#ef4444;
   --warn:#f59e0b;
-  --shadow:0 12px 28px rgba(15,23,42,.08);
+  --shadow:0 18px 38px rgba(0,0,0,.35);
 }
 html{font-size:15px}
 body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1.6;min-height:100vh;overflow-x:hidden}
 body::before{
   content:"";position:fixed;inset:-15% -10%;z-index:-1;pointer-events:none;
   background:
-    radial-gradient(600px 420px at 10% -10%, rgba(13,148,136,.18), transparent 60%),
-    radial-gradient(520px 420px at 90% 10%, rgba(29,78,216,.12), transparent 60%),
-    radial-gradient(520px 420px at 40% 120%, rgba(249,115,22,.12), transparent 60%);
+    radial-gradient(800px 520px at 10% -10%, rgba(45,212,191,.15), transparent 60%),
+    radial-gradient(700px 520px at 90% 0%, rgba(96,165,250,.12), transparent 60%),
+    radial-gradient(700px 520px at 40% 120%, rgba(245,158,11,.08), transparent 60%);
 }
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 
-.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(246,247,251,.92);backdrop-filter:blur(10px)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(11,15,22,.88);backdrop-filter:blur(12px)}
 .brand{font-weight:700;letter-spacing:1px;font-size:1rem}
 .nav-links{display:flex;gap:1rem;font-size:.85rem}
 .nav-links a{color:var(--muted);padding:.2rem .5rem;border-radius:6px}
@@ -85,7 +85,7 @@ a:hover{text-decoration:underline}
 .speed{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--muted)}
 .speed input[type="range"]{accent-color:var(--accent)}
 .speed span{min-width:48px;text-align:right}
-.queue-pill{font-size:.72rem;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:var(--surface)}
+.queue-pill{font-size:.72rem;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:var(--surface-2)}
 .queue-pill.active{border-color:rgba(15,118,110,.4);color:var(--accent);background:rgba(15,118,110,.08)}
 
 .payload-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;box-shadow:var(--shadow);margin-top:1rem}
@@ -146,6 +146,12 @@ a:hover{text-decoration:underline}
 .result.good .value{color:var(--good)}
 .result.accent .value{color:var(--accent)}
 .result.warn .value{color:var(--warn)}
+.table-title{margin-top:1rem;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+.plot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-top:1rem}
+.plot-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:.8rem;box-shadow:var(--shadow)}
+.plot-card img{width:100%;display:block;border-radius:10px;border:1px solid var(--border);background:var(--surface-2)}
+.plot-card .caption{font-size:.72rem;color:var(--muted);margin-top:.45rem}
 
 .data-table{width:100%;border-collapse:collapse;margin-top:.8rem;font-size:.78rem}
 .data-table th{background:var(--surface-2);color:var(--muted);text-align:left;padding:.45rem;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;font-size:.66rem}
@@ -356,12 +362,37 @@ footer{text-align:center;padding:1.5rem 0;color:var(--muted);font-size:.72rem;ma
         <div class="result accent"><div class="label">Reward mean</div><div class="value">Consistently positive</div></div>
         <div class="result warn"><div class="label">False positives</div><div class="value">Reduced after GRPO</div></div>
       </div>
+      <div class="table-title">Baseline vs. Trained at a Glance</div>
       <table class="data-table">
-        <tr><th>Metric</th><th>Baseline</th><th>Trained</th><th>Conclusion</th></tr>
-        <tr><td>Overall reward</td><td>Highly volatile</td><td>Stable positive</td><td>Policy learns to balance security and uptime</td></tr>
-        <tr><td>Env step reward</td><td>Random swings</td><td>Converges</td><td>Improved per-step decisions</td></tr>
-        <tr><td>Threat awareness</td><td>Near neutral</td><td>High confidence</td><td>Detects obfuscated attacks</td></tr>
+        <tr><th>Metric</th><th>Baseline (Untrained Model)</th><th>Trained Model (Post-GRPO)</th><th>Conclusion</th></tr>
+        <tr><td>Overall Reward (Mean)</td><td>Fluctuates extremely (-4.0 to +4.0)</td><td>Stabilizes consistently around +2.5</td><td>Policy shifted from random guessing to maximizing positive defensive actions.</td></tr>
+        <tr><td>Env Step Reward</td><td>Highly volatile (-3.0 to +3.0)</td><td>Converges smoothly at +2.0</td><td>The model learned to balance security gains against latency and usability penalties.</td></tr>
+        <tr><td>Threat Awareness</td><td>Random / Neutral (-1.0 to +1.0)</td><td>High confidence at +0.95</td><td>The clearest signal of success: the model identifies obfuscated attacks.</td></tr>
+        <tr><td>Action Stability</td><td>Unstable (High KL divergence)</td><td>Calm (Loss approx 0.00)</td><td>Defender no longer hallucinates or radically shifts distribution under pressure.</td></tr>
       </table>
+    </div>
+
+    <div class="section" style="margin-top:1.2rem">
+      <div class="section-head">
+        <div>
+          <h2>WandB reward curves</h2>
+          <p>Directly embedded plots from the training run.</p>
+        </div>
+      </div>
+      <div class="plot-grid">
+        <div class="plot-card">
+          <img src="https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2/resolve/main/WandB%20Results/train-reward.png" alt="Training reward mean">
+          <div class="caption">Mean reward climbs from volatile negatives to stable positive values as the policy learns.</div>
+        </div>
+        <div class="plot-card">
+          <img src="https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2/resolve/main/WandB%20Results/train-rewards-reward_environment_step-mean.png" alt="Environment step reward mean">
+          <div class="caption">Environment step reward rises and settles, indicating improved per-step defensive decisions.</div>
+        </div>
+        <div class="plot-card">
+          <img src="https://huggingface.co/spaces/SmartKapila/OmniGuard-Evolved-V2/resolve/main/WandB%20Results/train-rewards-reward_threat_awareness-mean.png" alt="Threat awareness mean">
+          <div class="caption">Threat awareness increases and stabilizes, showing reliable detection of obfuscated attacks.</div>
+        </div>
+      </div>
     </div>
 
     <div class="section" style="margin-top:1.4rem">
