@@ -302,10 +302,9 @@ async def infer_payload(req: InferRequest):
         action, conf, rationale = fallback_action(req, req.payload)
         return InferResponse(action=action, confidence=conf, rationale=rationale, queue_delay_ms=0.0)
     
-    model_url = f"https://api-inference.huggingface.co/models/{INFER_BASE_MODEL}"
+    model_id = INFER_ADAPTER_ID if req.model_type == "trained" else INFER_BASE_MODEL
+    model_url = f"https://api-inference.huggingface.co/models/{model_id}"
     parameters = {"max_new_tokens": 128, "temperature": 0.1, "return_full_text": False}
-    if req.model_type == "trained":
-        parameters["adapter_id"] = INFER_ADAPTER_ID
 
     prompt = f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n<|im_start|>user\nINCOMING PAYLOAD:\n{req.payload}\n\nRespond with your action JSON.<|im_end|>\n<|im_start|>assistant\n"
 
