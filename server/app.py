@@ -333,9 +333,13 @@ async def infer_payload(req: InferRequest):
                         continue
 
                     if response.status_code in (401, 403, 404):
-                        raise HTTPException(
-                            status_code=502,
-                            detail=f"HF API {response.status_code}: {response.text[:400]}",
+                        action, conf, rationale = fallback_action(req, req.payload)
+                        return InferResponse(
+                            action=action,
+                            confidence=conf,
+                            rationale=f"Fallback due to HF auth/not-found {response.status_code} - {rationale}",
+                            raw_response=response.text[:500],
+                            queue_delay_ms=queue_delay_ms,
                         )
 
                     if response.status_code in (429, 503):
@@ -352,9 +356,16 @@ async def infer_payload(req: InferRequest):
                         )
 
                     if response.status_code >= 400:
-                        raise HTTPException(
-                            status_code=502,
-                            detail=f"HF API {response.status_code}: {response.text[:400]}",
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(2 + attempt * 2)
+                            continue
+                        action, conf, rationale = fallback_action(req, req.payload)
+                        return InferResponse(
+                            action=action,
+                            confidence=conf,
+                            rationale=f"Fallback due to HF {response.status_code} - {rationale}",
+                            raw_response=response.text[:500],
+                            queue_delay_ms=queue_delay_ms,
                         )
 
                     res_data = response.json()
@@ -394,9 +405,19 @@ async def infer_payload(req: InferRequest):
                 except HTTPException:
                     raise
                 except Exception as e:
-                    raise HTTPException(status_code=502, detail=f"Inference error: {str(e)[:400]}")
+                    if attempt == max_retries - 1:
+                        action, conf, rationale = fallback_action(req, req.payload)
+                        return InferResponse(
+                            action=action,
+                            confidence=conf,
+                            rationale=f"Fallback due to unexpected inference error - {rationale}",
+                            raw_response=str(e)[:500],
+                            queue_delay_ms=queue_delay_ms,
+                        )
+                    await asyncio.sleep(2 + attempt)
         
-    raise HTTPException(status_code=500, detail="Inference failed")
+    action, conf, rationale = fallback_action(req, req.payload)
+    return InferResponse(action=action, confidence=conf, rationale="Fallback max retries reached - " + rationale, queue_delay_ms=0.0)
 
 def run() -> None:
     import uvicorn
